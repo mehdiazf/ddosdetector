@@ -197,9 +197,9 @@ std::string TcpRule::get_description(){
     
     std::string flg="";
     flg=flags.get_flags();
-    return ( ((src_port.stat())?("src_port:" + src_port.to_range()):"") + 
-             ((dst_port.stat())?("dst_port:" + dst_port.to_range()):"") + 
-             ((len.stat()?("Length:" + len.to_str()):"")) + ((flg.length()==0)?"":flg) );
+    return ( ((src_port.stat())?("src_port:" + src_port.to_range() + "|"):"") + 
+             ((dst_port.stat())?("dst_port:" + dst_port.to_range() + "|" ):"") + 
+             ((len.stat()?("Length:" + len.to_str() + "|"):"")) + ((flg.length()==0)?"":("flags:" + flg + "|")));
     
     
 }

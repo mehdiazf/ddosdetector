@@ -10,7 +10,11 @@ namespace action
         std::ofstream ofs(to, std::ios::out | std::ios::app);
         if(ofs)
         {
-            ofs << "ddosdetector trigger alarm: " << data << "\n";
+            auto t = std::time(0);
+            auto tm = *localtime(&t);
+            char buf[80];
+            strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tm);
+            ofs << "Alarm: "<<"["<<buf <<"] |" << data << "\n";
         }
         else
         {

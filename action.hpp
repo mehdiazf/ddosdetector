@@ -9,6 +9,8 @@
 #include <syslog.h>
 #include <stdlib.h>
 #include <fstream>
+#include <chrono>
+#include <ctime>
 
 // Logging
 #include "log4cpp/Category.hh"

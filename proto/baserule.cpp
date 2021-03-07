@@ -253,7 +253,7 @@ std::string BaseRule::get_job_info(std::string txt) const
     // return info;
     
 
-    std::string info = rule_type + "|" + txt + "|"
+    std::string info = rule_type + "|" + ((txt.length()>0)?(txt):"|")
         + dst_top.get_max()
         + (comment == "" ? "" : "|" + comment)/* + "|"
         + (ip_src.stat() ? ip_src.to_cidr() : "") + "|"

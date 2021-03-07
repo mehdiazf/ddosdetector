@@ -88,8 +88,8 @@ IcmpRule& IcmpRule::operator+=( IcmpRule& other)
 
 std::string IcmpRule::get_description(){
     
-    return ( ((type.stat())?("type:" + type.to_str()):"") + 
-             ((code.stat())?("code:" + code.to_str()):"") );
+    return ( ((type.stat())?("type:" + type.to_str() + "|"):"") + 
+             ((code.stat())?("code:" + code.to_str() + "|"):"") );
     
     
 }
