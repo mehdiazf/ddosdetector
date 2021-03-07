@@ -78,9 +78,18 @@ IcmpRule& IcmpRule::operator+=( IcmpRule& other)
         count_packets += other.count_packets;
         count_bytes += other.count_bytes;
         dst_top += other.dst_top;
-        // сбрасываем счетчик у исходного правила
+        // Reset the counter for the original rule
         other.count_packets = 0; 
         other.count_bytes = 0;
     }
     return *this;
+}
+
+
+std::string IcmpRule::get_description(){
+    
+    return ( ((type.stat())?("type:" + type.to_str()):"") + 
+             ((code.stat())?("code:" + code.to_str()):"") );
+    
+    
 }

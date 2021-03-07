@@ -21,9 +21,9 @@
 extern log4cpp::Category& logger;
 
 /*
- Класс клиентской сессии. Обрабатывает подключение одного клиента,
- занимается распарсиванием команд полученных от клиента, выводит данные
- по запрошенным командам.
+ Client session class. Handles the connection of one client,
+ Parses commands received from the client, outputs data
+ By the requested commands.
 */
 template<class T>
 class ControlSession
@@ -32,33 +32,33 @@ class ControlSession
 public:
     ControlSession(T socket, const std::shared_ptr<RulesCollection> c);
     ~ControlSession();
-    // запуск процесса обработчки сессии
+    // Starting the session handling process
     void start();
 
 private:
-    // получение данных от клиента, читает в буфер data_, размером max_length и
-    // складывает данные в cmd_ пока не встретится символ завершения команды: \n
+    // Receiving data from the client, reads into the data_ buffer, of size max_length and
+    // adds data to cmd_ until the command termination character is encountered:  n
     void do_read();
-    // FUTURE: функция, для отлова сигнала Ctrl^D (пока не используется)
+    // FUTURE: function to catch Ctrl% D signal (not used yet)
     void do_read_signal();
-    // отправка данных от клиента
+    // Sending data from the client
     void do_write(const std::string& msg);
-    // парсер команд полученных от клиента
+    // Parser of commands received from the client
     void parse();
 
     T socket_;
-    // ссылка на эталонную коллекцию правил, для изменения
+    // Reference to the reference collection of rules to modify
     std::shared_ptr<RulesCollection> collect_;
-    // буфер
+    // Buffer
     enum { max_length = 4096 };
     char data_[max_length];
-    // полученная команда от клиента
+    // Received command from the client
     std::string cmd_;
-    // приветствие в консоли
+    // Console greeting
     const std::string cli_ = "ddoscontrold> ";
-    // символы удаляемые из полученных команд
+    // Characters to remove from received commands
     std::string bad_symbols_{'\n', '\r', '\0'};
-    // help текст
+    // Help text
     const std::string help_ = "Console commands:"
         "<type> - may be TCP, UDP or ICMP; <num> - number (0..65535);\n"
         "  help                                show this help\n"
@@ -71,40 +71,40 @@ private:
 };
 
 /*
- Класс TCP/UNIX сервер. При инициализации определается тип сервера. Если port -
- это число, то запускается TCP сервер на порту port. Если port - это путь к
- файлу, то запускается UNIX сервер.
+ TCP / UNIX server class. During initialization, the server type is determined. If port is
+ This number, the TCP server is started on port port. If port is the path to
+ File, the UNIX server is started.
 */
 class ControlServer
 {
 public:
     /*
-     Инициализация сервера.
-     @param io_service: созданный заранее объект io_service
-     @param port: порт на котором запускается сервер (либо путь к unix socket)
-     @param collect: эталонная коллекция правил
+    Server initialization.
+     @param io_service: pre-created io_service object
+     @param port: the port on which the server is started (or the path to the unix socket)
+     @param collect: reference collection of rules
     */
     ControlServer(boost::asio::io_service& io_service, const std::string& port,
                   std::shared_ptr<RulesCollection> collect);
-    // деструктор следит за корректным удалением UNIX socket файла
+    // The destructor keeps track of the correct deletion of the UNIX socket file
     ~ControlServer();
 private:
-    // запуск tcp сервера
+    // Starting tcp server
     void do_tcp_accept();
-    // запуск unix сервера
+    // Starting unix server
     void do_unix_accept();
 
-    // флаг unix сервера
+    // Flag unix server
     bool is_unix_socket_;
-    // порт запуска
+    // Launch port
     std::string port_;
     // acceptors
     std::shared_ptr<boost::asio::ip::tcp::tcp::acceptor> tcp_acceptor_;
     std::shared_ptr<boost::asio::local::stream_protocol::acceptor> unix_acceptor_;
-    // сокеты
+    // Sockets
     std::shared_ptr<boost::asio::ip::tcp::tcp::socket> tcp_socket_;
     std::shared_ptr<boost::asio::local::stream_protocol::stream_protocol::socket> unix_socket_;
-    // эталонная коллекция
+    // Reference collection
     std::shared_ptr<RulesCollection> collect_;
 };
 

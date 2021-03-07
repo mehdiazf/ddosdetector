@@ -39,7 +39,7 @@ RulesList<T>& RulesList<T>::operator+=(RulesList& other)
         {
             for(unsigned int i=0; i < rules_.size(); i++)
             {
-                // прибавляем счетчики правил из other, затем обнуляем счетчики в other
+                // Add the rule counters from other, then reset the counters in other
                 rules_[i] += other.rules_[i]; 
             }
         }
@@ -60,16 +60,16 @@ void RulesList<T>::calc_delta(const RulesList& rules_old)
         boost::lock_guard<boost::shared_mutex> g_old(rules_old.m_, boost::adopt_lock);
         if(rules_.size() == rules_old.rules_.size())
         {
-            // сколько прошло миллисекунд между итерациями
+            // How many milliseconds elapsed between iterations
             double delta_time = std::chrono::duration<double, std::milli>(
                 last_update_ - rules_old.last_update_).count();
             uint64_t delta_c = 0;
             for(unsigned int i=0; i < rules_.size(); i++)
             {
-                // считаем дельту пакет/сек
+                // Count the delta packet / sec
                 delta_c = rules_[i].count_packets - rules_old.rules_[i].count_packets;
                 rules_[i].pps = round((delta_c / delta_time) * 1000);
-                // считаем дельту байт/сек
+                // Count delta bytes / sec
                 delta_c = rules_[i].count_bytes - rules_old.rules_[i].count_bytes;
                 rules_[i].bps = round((delta_c / delta_time) * 1000);
             }
@@ -83,14 +83,14 @@ void RulesList<T>::check_triggers(ts_queue<action::TriggerJob>& task_list,
     boost::lock_guard<boost::shared_mutex> guard(m_);
     for(auto& r: rules_)
     {
-        if(r.is_triggered()) // если триггер сработал
+        if(r.is_triggered()) // If the trigger is fired
         {
-            // добавляем задание триггера в очередь обработчика заданий
-            task_list.push(action::TriggerJob(r.act, r.get_job_info()));
-            // отправляем event в базу
+            // Add the trigger job to the job processor queue
+            task_list.push(action::TriggerJob(r.act, r.get_job_info(r.get_description())));
+            // Send event to the database
             influx.insert(r.get_trigger_influx());
         }
-        // очищаем  проверочные счетчики, чтобы не забивать память
+        // We clear the check counters so as not to clog the memory
         r.dst_top.clear();
     }
 }
@@ -127,8 +127,8 @@ void RulesList<T>::insert_rule(const unsigned int num, T rule)
     if(num > (rules_.size()-1))
         throw RuleException("incorrect number rule '" + to_string(num)
             + "', it should be: 0 < num < " + to_string(rules_.size()));
-    // сдвигаем все элементы списка начиная с num-того
-    // вперед и добавляем новый элемент
+    // Shift all elements of the list starting from num
+    // go ahead and add a new item
     std::vector<T> temp;
     temp.reserve(rules_.size() + 1);
     temp.insert(temp.end(), rules_.begin(), rules_.begin()+num);
@@ -145,9 +145,9 @@ std::string RulesList<T>::get_rules()
     uint64_t all_pps = 0;
     uint64_t all_bps = 0;
     unsigned int max_text_size = 0;
-    boost::format num_f("%5s"); // форматируем по ширине вывод номеров правил
+    boost::format num_f("%5s"); // Formatting the output of rule numbers to the width
     boost::shared_lock<boost::shared_mutex> guard(m_);
-    for (unsigned int i=0; i<rules_.size(); i++) // /находим самую длинную строку
+    for (unsigned int i=0; i<rules_.size(); i++) // /Find the longest line
     {
         if(rules_[i].text_rule.length() > max_text_size)
         {
@@ -158,7 +158,7 @@ std::string RulesList<T>::get_rules()
     {
         res += boost::str(num_f % to_string(i))
             + ":   "
-            // форматируем ширину всех строк по самой длинной строке
+            // Formatting the width of all lines by the longest line
             + format_len(rules_[i].text_rule, max_text_size)
             + "  : "
             + parser::to_short_size(rules_[i].pps, false) + " ("
@@ -234,7 +234,7 @@ RulesCollection::RulesCollection(const RulesCollection& parent, bool clear)
     udp = parent.udp;
     icmp = parent.icmp;
     if(clear)
-    { // очищаем правила в списках правил
+    { // Clearing the rules in the rule lists
         tcp.clear();
         udp.clear();
         icmp.clear();
@@ -330,12 +330,12 @@ void RulesFileLoader::reload_config()
     {
         std::ifstream r_file(rules_config_file_);
         std::string line;
-        // Создаем копию текущей коллекции правил и очищаем правила в листах
+        // Create a copy of the current collection of rules and clear the rules in sheets
         RulesCollection buff_collect(*collect_, true);
 
         while(std::getline(r_file, line))
         {
-            // разбиваем строку в вектор по пробелам
+            // Split the string into a vector by spaces
             std::vector<std::string> t_cmd = tokenize(line);
             if(t_cmd.size() > 1)
             {
@@ -345,7 +345,7 @@ void RulesFileLoader::reload_config()
                     {
                         continue;
                     }
-                    if(t_cmd[0] == "TCP") // добавляем TCP правило
+                    if(t_cmd[0] == "TCP") // Add a TCP rule
                     {
                         buff_collect.tcp.add_rule(
                             TcpRule(std::vector<std::string>(
@@ -354,7 +354,7 @@ void RulesFileLoader::reload_config()
                             )
                         );
                     }
-                    else if(t_cmd[0] == "UDP") // добавлем UDP правило
+                    else if(t_cmd[0] == "UDP") // Add a UDP rule
                     {
                         buff_collect.udp.add_rule(
                             UdpRule(std::vector<std::string>(
@@ -363,7 +363,7 @@ void RulesFileLoader::reload_config()
                             )
                         );
                     }
-                    else if(t_cmd[0] == "ICMP") // добавляем ICMP правило
+                    else if(t_cmd[0] == "ICMP") // Add ICMP rule
                     {
                         buff_collect.icmp.add_rule(
                             IcmpRule(std::vector<std::string>(
@@ -372,7 +372,7 @@ void RulesFileLoader::reload_config()
                             )
                         );
                     }
-                    else // если правило неопределенного типа
+                    else // If the rule is of undefined type
                     {
                         logger << log4cpp::Priority::ERROR
                                << "Not found rule type '" + t_cmd[0] + "'";
@@ -402,18 +402,18 @@ void RulesFileLoader::sig_hook(boost::asio::signal_set& this_set_,
 {
     if (!error)
     {
-        // загружаем правила из файла
+        // Load rules from file
         reload_config(); 
-        // добавляем новое асинхронное задание для сигнала
+        // Add a new asynchronous job for the signal
         sig_set_.async_wait(boost::bind(&RulesFileLoader::sig_hook,
             this, boost::ref(sig_set_), _1, _2));
     }
 }
 void RulesFileLoader::start()
 {
-    // загружаем правила из файла
+    // Load rules from file
     reload_config();
-    // добавляем новое асинхронное задание для сигнала
+    // Add a new asynchronous job for the signal
     sig_set_.async_wait(boost::bind(&RulesFileLoader::sig_hook,
         this, boost::ref(sig_set_), _1, _2));
 }

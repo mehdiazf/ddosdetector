@@ -17,26 +17,26 @@ class CountersList
 public:
     CountersList();
     CountersList& operator+=(CountersList& other);
-    // вывод списка (debug)
+    // List output (debug)
     void print() const;
-    // размер списка
+    // List size
     unsigned int size() const;
-    // очистка листа
+    // Sheet cleaning
     void clear();
-    // увеличить счетчик элемента k на значение 1 или v
+    // Increment the counter of element k by 1 or v
     void increase(const Key& k);
     //void increase(const Key& k, const Val& v);
-    // возвращает имя самого большого счетчика
+    // Returns the name of the largest counter
     std::string get_max() const;
 private:
     std::map<Key, Val> map_;
 };
 /*
- Класс числового периода. Используется для хранения какого либо ограничения
- имеющего младшее и старшее число. Например представление посдети ip адресов:
- 0.0.0.0/0  0-4294967295 как периода: 0-4294967295 позволяет в даллнейшем
- производить быструю проверку того, что ip адрес принадлежит подсети, с помощью
- функуции in_this().
+ Numeric period class. Used to store some kind of restriction
+ Having the lowest and highest numbers. For example, the presentation of ip addresses:
+ 0.0.0.0/0 0-4294967295 as period: 0-4294967295 allows for further
+ Make a quick check that the ip address belongs to the subnet using
+ In_this () functions.
 */
 template<class T>
 class NumRange
@@ -46,26 +46,26 @@ public:
     explicit NumRange(const std::pair<T, T>& p);
     bool operator==(NumRange const & other) const;
     NumRange& operator=(const std::pair<T, T>& p);
-    // проверка, что чилсо есть в периоде
+    // Checking that there is chilso in the period
     bool in_this(T num) const;
-    // статус параметра (включен или выключен)
+    // Parameter status (enabled or disabled)
     bool stat() const;
-    // возвращает период в формате CIDR, конвертируя числа в ip адреса
+    // Returns the period in CIDR format, converting numbers to ip addresses
     std::string to_cidr() const;
-    // возвращает период в формате строки запись через знак "-"
+    // Returns the period in the format of a string, notation separated by a '-' sign
     std::string to_range() const;
 private:
-    // первое число промежутка
+    // The first number of the interval
     T start_;
-    // последнее число промежутка
+    // Last number of the interval
     T end_;
-    // статус
+    // Status
     bool enable_;
 };
 /*
- Класс сравниваемого числового параметра. Позволяет сохранить число и задать тип
- сравнения с этим числом (=, > или <). В дальнейшем вызов функции in_this()
- сравнит передаваемое число с параметром, причем сравнение будет типа type_
+ The class of the numeric parameter to compare. Allows you to store the number and set the type
+ Comparisons with this number (=,> or <). Further, the call to the in_this () function
+ Will compare the passed number with the parameter, and the comparison will be of type type_
 */
 template<class T>
 class NumComparable
@@ -75,19 +75,20 @@ public:
     explicit NumComparable(const std::pair<T, unsigned short int>& p);
     bool operator==(NumComparable const & other) const;
     NumComparable& operator=(const std::pair<T, unsigned short int>& p);
-    // сравнение num с параметром
+    // Compare num to parameter
     bool in_this(T num) const;
-    // представление числа в виде строки с указанием типа сравнения
+    // string representation of a number with an indication of the comparison type
+    bool stat() const;
     std::string to_str() const;
 private:
-    // число параметра
+    // Parameter number
     T num_;
-    // статус
+    // status
     bool enable_;
-    // тип сравнения, модет быть:
-    // 0 - это =
-    // 1 - это >
-    // 2 - это <
+    // Comparison type, can be:
+    // 0 is =
+    // 1 is>
+    // 2 is <
     unsigned short int type_;
 };
 
@@ -98,34 +99,34 @@ public:
     BaseRule();
     explicit BaseRule(const std::vector<std::string>& tkn_rule);
     void BaseRule_parse(const boost::program_options::variables_map& vm);
-    // проверка триггеров правила, если триггер не сработал, то происходит
-    // обновление времени в переменных: pps_last_not_triggered и
+    // Checking the triggers of the rule, if the trigger did not work, then the
+    // update time in variables: pps_last_not_triggered and
     // bps_last_not_triggered.
     bool is_triggered();
-    // формирование текста для задания триггера
-    std::string get_job_info() const;
-    // формирование запроса в базу InfluxDB для сработавшего триггера
+    // Formation of text for setting a trigger
+    std::string get_job_info(std::string txt) const;
+    // Generating a request to the InfluxDB database for a triggered trigger
     std::string get_trigger_influx() const;
 
-    // базовые параметры правила
-    std::string rule_type;                             // текстовое представление типа правила (tcp, udp и т.д.)
-    std::string text_rule;                        // текст правила
-    action::Action act;                           // действие триггера
-    std::string comment;                          // комментарий к правилу
-    uint64_t count_packets;                       // счетчик пакетов
-    uint64_t count_bytes;                         // счетчик байт
-    bool next_rule;                               // перейти к следующему правилу
-    uint64_t pps;                                 // счетчик пакетов в секунду
-    uint64_t bps;                                 // счетчик байт в секунду
-    uint32_t pps_trigger;                         // триггер срабатывания для pps (команда: --pps-trigger)
-    uint32_t bps_trigger;                         // триггер срабатывания для bps (команда: --bps-trigger)
-    std::time_t pps_last_not_triggered;           // время последнего срабатывания pps триггера
-    std::time_t bps_last_not_triggered;           // время последнего срабатывания bps триггера
-    unsigned int pps_trigger_period;              // период, который должен быть активен триггер pps
-    unsigned int bps_trigger_period;              // период, который должен быть активен триггер bps
-    CountersList<uint32_t, unsigned int> dst_top; // лист dst_ip адресов со счетчиками, если используется подсеть
+    // Basic rule parameters
+    std::string rule_type;                             // Textual representation of the rule type (tcp, udp, etc.)
+    std::string text_rule;                        // Text of the rule
+    action::Action act;                           // Trigger action
+    std::string comment;                          // Comment on the rule
+    uint64_t count_packets;                       // Packet counter
+    uint64_t count_bytes;                         // Byte counter
+    bool next_rule;                               // Go to next rule
+    uint64_t pps;                                 // Packets per second counter
+    uint64_t bps;                                 // Bytes per second counter
+    uint32_t pps_trigger;                         // Trigger trigger for pps (command: --pps-trigger)
+    uint32_t bps_trigger;                         // Trigger trigger for bps (command: --bps-trigger)
+    std::time_t pps_last_not_triggered;           // Time of the last pps trigger
+    std::time_t bps_last_not_triggered;           // Time of the last bps trigger
+    unsigned int pps_trigger_period;              // The period that the pps trigger should be active
+    unsigned int bps_trigger_period;              // Period that the bps trigger should be active
+    CountersList<uint32_t, unsigned int> dst_top; // Dst_ip list of addresses with counters, if a subnet is used
 protected:
-    // текст правила разбитый на составляющие (по пробелу или знаку =)
+    // The text of the rule divided into components (by space or sign =)
     std::vector<std::string> tokenize_rule;
 };
 

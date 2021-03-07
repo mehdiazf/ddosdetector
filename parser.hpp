@@ -19,23 +19,23 @@
 
 namespace parser
 {
-    // сокращения для байт/сек
+    // Abbreviations for bytes / sec
     const std::vector<std::string> pref_b = { "b/s", "Kb/s", "Mb/s",
                                               "Gb/s", "Tb/s", "Pb/s" };
-    // сокращения для пакет/сек
+    // abbreviations for packet / sec
     const std::vector<std::string> pref_p = { "p/s", "Kp/s", "Mp/s",
                                               "Gp/s", "Tp/s", "Pp/s" };
-    // сокращения для количества байт
+    // Abbreviations for the number of bytes
     const std::vector<std::string> size_b = { "b", "Kb", "Mb",
                                               "Gb", "Tb", "Pb" };
-    // сокращения для количества пакетов 
+    // Abbreviations for the number of packages 
     const std::vector<std::string> size_p = { "p", "Kp", "Mp",
                                               "Gp", "Tp", "Pp" };
-    // возможные символы для указания типа сравнения
+    // Possible characters to indicate the type of comparison
     const std::vector<char> comp_t = { '=', '>', '<' };
 
     /*
-     класс для разбора строкового представления правил и парсинга команд
+    Class for parsing the string representation of rules and parsing commands
     */
     class CommandParser
     {
@@ -43,23 +43,23 @@ namespace parser
         explicit CommandParser(
             const  boost::program_options::options_description& opt);
         /*
-         добавление опций в текущий options_
-         @param opt: добавляемые опции
+         Adding options to the current options_
+         @param opt: options to add
         */
         void add_opt(const boost::program_options::options_description& opt);
         /*
-         парсинг правила, проверка параметров на ошибочные
-         @param tokenize_input: строка правила разбитая в вектор по пробелам
+         Parsing a rule, checking parameters for erroneous
+         @param tokenize_input: the rule string split into a vector by spaces
         */
         boost::program_options::variables_map parse(
             const std::vector<std::string>& tokenize_input);
         /*
-         вывод справки по камандам из текущего options_
+         Displaying help for commands from the current options_
         */
         void help() const;
         /*
-         обратная операция - склейка vector<string> в одну строку
-         @param v: вектор строк который нужно склеить
+         Reverse operation - gluing vector <string> into one line
+         @param v: the vector of strings to be concatenated
         */
         static std::string join(const std::vector<std::string>& v);
     private:
@@ -68,40 +68,40 @@ namespace parser
 
     // FUNCTIONS parser::
     /*
-     парсинг строки с ip адресом (1.1.1.1) или ip сетью (1.1.1.1/24) в
-     NumRange представление: start_ip и end_ip. Функция конвертирует ip
-     адрес из CIDR представления в ulong, высчитывает первый и последний
-     адрес по маске подсети и формирует из них pair<uint32_t, uint32_t>
-     Если функции передается строка с ip адресов без подсети, то
-     pair.first=pair.second.
+     Parsing a string with an ip address (1.1.1.1) or ip network (1.1.1.1/24) into
+     NumRange representation: start_ip and end_ip. Function converts ip
+     Address from CIDR submission to ulong, calculates first and last
+     Address by subnet mask and forms pair <uint32_t, uint32_t>
+     If the function is passed a string from ip addresses without a subnet, then
+     Pair.first = pair.second.
     */
     std::pair<uint32_t, uint32_t> range_from_ip_string(const std::string& ipstr);
     /*
-     парсинг диапозона значений из строки: <num>-<num> или <num>.
-     Если передается одно число, без "-", то return pair.first=pair.second
+     Parsing a range of values ​​from a string: <num> - <num> or <num>.
+     If one number is passed, without '-', then return pair.first = pair.second
     */
     std::pair<uint16_t, uint16_t> range_from_port_string(const std::string& portstr);
     /*
-     преобразование числа в короткую запись с указанием типа (например: 10Mb).
-     @param size: преобразыемое число
-     @param its_byte: тип числа, байты или пакеты (Mp или Mb)
+     Converting a number into a short record indicating the type (for example: 10Mb).
+     @param size: number to convert
+     @param its_byte: type of number, bytes or packets (Mp or Mb)
     */
     std::string to_short_size(unsigned long int size, bool its_byte = true);
     /*
-     преобразует короткую запись числа с типом в число uint64_t.
-     @param size: строка которую надо преобразовать
-     @param its_byte: тип числа, байты или пакеты (Mp или Mb)
+    Converts short notation of number with type to number uint64_t.
+     @param size: the string to be converted
+     @param its_byte: type of number, bytes or packets (Mp or Mb)
     */
     uint64_t from_short_size(const std::string& size, bool its_byte = true);
     /*
-     преобразование строкового правила action в экземпляр класса action::Action
-     Функция проверяет соответствие формату <type>:<param>
+     Converting the string rule action to an instance of the action :: Action class
+     The function checks for compliance with the format <type>: <param>
     */
     action::Action action_from_string(const std::string& value);
     /*
-     преобразование правила сравнения (формат: >num, <num, =num) в
-     pair<T,type_comp> где type_comp число соответствующее типу операции
-     сравненияЖ 0 это =, > это 1, < это 2 (см. const comp_t).
+     Converting the comparison rule (format:> num, <num, = num) to
+     Pair <T, type_comp> where type_comp is the number corresponding to the type of operation
+     Comparisons Ж 0 is =,> this is 1, <is 2 (see const comp_t).
     */
     template<typename T>
     std::pair<T, unsigned short int> numcomp_from_string(const std::string& value)
@@ -128,20 +128,20 @@ namespace parser
         return std::make_pair/*<T, unsigned short int>*/((T)num, get_index<char>(comp_t, value.at(0)));
     }
     /*
-     преобразование строки вида: f1:0,f2:1,f3:1,fn:[0,1] в pair<bits,mask>,
-     где bits - это bitset сотсояния флагов, т.е. 0 и 1 из примера fn:[0,1]
-     a mask - это bitset-маска указывающая какие биты проверять. Каждый флаг
-     проверяется на корректность по списку accept_flags, из него же берется
-     положение.
+     Converting a string of the form: f1: 0, f2: 1, f3: 1, fn: [0,1] into pair <bits, mask>,
+     Where bits is the bitset of the state of the flags, i.e. 0 and 1 from example fn: [0,1]
+     A mask is a bitset mask indicating which bits to check. Every flag
+     Is checked for correctness according to the accept_flags list, from which it is taken
+     Position.
 
-     Пример:
+     Example:
      vector<char> f_accept = { 'U', 'A', 'P', 'R', 'S', 'F' };
      pair<bitset<6>, bitset<6>> ex;
-     ex = bitset_from_string<bitset<6>>("U:0,S:1,F:0");
-     cout << "bits: " << ex.first << endl;
-     cout << "mask: " << ex.second << endl;
+     ex = bitset_from_string<bitset<6>>('U:0,S:1,F:0');
+     cout << 'bits: ' << ex.first << endl;
+     cout << 'mask: ' << ex.second << endl;
 
-     Результат:
+     Result:
      bits: 000010
      mask: 100011
     */

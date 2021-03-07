@@ -35,8 +35,8 @@
 extern log4cpp::Category& logger;
 
 /*
- Класс для хранения правил анализа пакетов одного L4 протокола (TCP,
- UDP, ICMP и т.д.).
+ A class for storing packet analysis rules for one L4 protocol (TCP,
+ UDP, ICMP, etc.).
 */
 template<class T>
 class RulesList
@@ -45,56 +45,56 @@ public:
     explicit RulesList(boost::program_options::options_description opt);
     bool operator==(const RulesList& other)  const;
     /*
-     сравнение списка. В стравнение проверяется только rules_ и last_update_
+     Comparison of the list. Only rules_ and last_update_ are checked against the comparison.
     */
     RulesList& operator=(const RulesList& other);
     /*
-     сложение счетчиков правил. Используется потоком watcher для сбора
-     статистики с различных копий листов в разных потоках. После сложения
-     счетчиков, в other счетчики обнуляются.
+     Addition of rule counters. Used by the watcher thread to collect
+     Statistics from different copies of sheets in different streams. After addition
+     Counters, in other counters are cleared.
     */
     RulesList& operator+=(RulesList& other);
     /*
-     просчет delta величин: сколько пакетов/байтов получено за единицу
-     времени (за 1 секунду).
-     @param rules_old: лист правил со старыми данными (данными снятыми в
-     прошлую итерацию); 
+     Calculation of delta values: how many packets / bytes received per unit
+     Time (for 1 second).
+     @param rules_old: rule sheet with old data (data captured in
+     Past iteration);
     */
     void calc_delta(const RulesList& rules_old);
     /*
-     проверка триггеров правил, установка заданий обработчику заданий.
-     @param task_list: ссылка на очередь заданий обработчика;
+     Checking rule triggers, setting jobs to the job processor.
+     @param task_list: reference to the task queue of the handler;
     */
     void check_triggers(ts_queue<action::TriggerJob>& task_list,
         InfluxClient& influx);
     /*
-     добавление правила в конец листа
-     @param rule: добавляемое правито типа T
+     Checking rule triggers, setting jobs to the job processor.
+     @param task_list: reference to the task queue of the handler;
     */
     void add_rule(T rule);
     /*
-     удаление правила по номеру
-     @param num: номер удаляемого правила в списке
+    Delete rule by number
+     @param num: the number of the deleted rule in the list
     */
     void del_rule(const unsigned int num);
     /*
-     очистка списка правил
+     Clearing the list of rules
     */
     void clear();
     /*
-     вставка нового правила в список на позицию num. Если позиция уже занята,
-     все элементы, начиная с этой позиции сдвигаются к концу списка.
-     @param num: позиция установки правила
-     @param rule: добавляемое правило
+     Inserting a new rule into the list at position num. If the position is already taken,
+     All elements starting from this position are shifted to the end of the list.
+     @param num: the position to set the rule
+     @param rule: added rule
     */
     void insert_rule(const unsigned int num, T rule);
     /*
-     проверка пакета по правилам листа. Функция вызывается для каждого
-     полученного пакета T типа.
-     @param l4header: пакет с обрезанными ip и ethernet заголовками
-     @param s_addr: ip адрес источника
-     @param d_addr: ip адрес назначения
-     @param len: размер пакета целиком (с ip и ethernet заголовками)
+     Checking the package according to the rules of the sheet. The function is called for each
+     Received packet of type T.
+     @param l4header: packet with stripped ip and ethernet headers
+     @param s_addr: source ip address
+     @param d_addr: destination ip address
+     @param len: whole packet size (with ip and ethernet headers)
     */
     template<typename H>
     bool check_list(const H& l4header, const uint32_t s_addr,
@@ -117,79 +117,79 @@ public:
         return false;
     }
     /*
-     вывод текстового представления правил и статистики.
+     Displaying a textual representation of rules and statistics.
     */
     std::string get_rules();
     /*
-     формирование запросов для статистики в InfluxDB
+    Generating queries for statistics in InfluxDB
     */
     std::string get_influx_querys();
     /*
-     возвращает параметры парсинга правил (переменная parse_opt_).
+     Returns parameters for parsing rules (variable parse_opt_).
     */
     boost::program_options::options_description get_params() const;
 private:
     mutable boost::shared_mutex m_;
-    // вектор для хранения правил
+    // Vector for storing rules
     std::vector<T> rules_;
-    // опции парсинга правил
+    // Rule parsing options
     boost::program_options::options_description parse_opt_;
-    // время последнего изменения данных в листе (изменение счетчиков)
+    // Time of the last change of data in the sheet (change of counters)
     std::chrono::high_resolution_clock::time_point last_update_; 
 };
 
 /*
- Класс для хранения листов правил для разных протоколов. Содержит методы
- для работы со всеми листами сразу. Доступ к определенному листу осуществляется
- на прямую, в виду чего классу не требуется дополнительной синхронизации между
- потоками (защита данных от инвариантности происходит на более гранулированном
- уровне - в классах RulesList).
+ Class for storing rule sheets for different protocols. Contains methods
+ To work with all sheets at once. A specific sheet is accessed
+ Directly, meaning that the class does not need additional synchronization between
+ Streams (data protection from invariance occurs on a more granular
+ Level - in the RulesList classes).
 */
 class RulesCollection
 {
 public:
     RulesCollection(boost::program_options::options_description& help_opt,
-                // опции TCP правил
+                // TCP rules options
                 boost::program_options::options_description& tcp_opt,
-                // опции UDP правил
+                // UDP rules options
                 boost::program_options::options_description& udp_opt,
-                // опции ICMP правил
+                // ICMP rules options
                 boost::program_options::options_description& icmp_opt);
     /*
-     конструктор копирования.
-     @param clear: если стоит true, то списки правил очищаются
+     Copy constructor.
+     @param clear: if true, then rule lists are cleared
     */
     RulesCollection(const RulesCollection& parent, bool clear = false);
     bool operator!=(const RulesCollection& other) const;
     RulesCollection& operator=(const RulesCollection& other);
     RulesCollection& operator+=(RulesCollection& other);
     /*
-     формирует справку по всем параметрам всех типов правил (переменная
-     help_opt).
+     Generates help for all parameters of all types of rules (variable
+     Help_opt).
     */
     std::string get_help() const;
     /*
-     формирует текстовое представление всех листов правил (вызываются функции
-     RulesList<T>.get_rules())
+     Forms a textual representation of all rule sheets (functions are called
+     RulesList <T> .get_rules ())
     */
     std::string get_rules();
     /*
-     формирует набор запросов в базу InfluxDB для добавления статистики
-     (вызываются функции RulesList<T>.get_influx_querys())
+    Generates a set of queries to the InfluxDB database to add statistics
+     (functions RulesList <T> .get_influx_querys () are called)
     */
     std::string get_influx_querys();
     /*
-     проверяется допустим ли тип списка правил.
-     @param type: название типа
+     Checks if the type of the list of rules is valid.
+     @param type: type name
     */
     bool is_type(const std::string& type) const;
     /*
-     подсчет delta данных во всех списках
-     @param old: старая версия данных
+   Counting delta data in all lists
+     @param old: old version of the data
     */
     void calc_delta(const RulesCollection& old);
     /*
-     проверка триггеров во всех списках правил
+     Checking triggers in all rule lists
      @param task_list
     */
     void check_triggers(ts_queue<action::TriggerJob>& task_list,
@@ -198,15 +198,15 @@ private:
     std::vector<std::string> types_;
     boost::program_options::options_description help_;
 public:
-    RulesList<TcpRule> tcp; // лист правил для TCP
-    RulesList<UdpRule> udp; // лист правил для UDP
-    RulesList<IcmpRule> icmp; // лист правил для ICMP
+    RulesList<TcpRule> tcp; // Rule sheet for TCP
+    RulesList<UdpRule> udp; // Rule sheet for UDP
+    RulesList<IcmpRule> icmp; // Rule sheet for ICMP
     std::chrono::high_resolution_clock::time_point last_change;
 };
 
 /*
- класс загрузки/сохраненеи файла с правилами. Устанавливае signal_hook
- для перезагрузки конфигурации при получении сигнала SIGHUP.
+ Class of loading / saving file with rules. Set signal_hook
+ To reload the configuration when a SIGHUP is received.
 */
 class RulesFileLoader
 {
@@ -214,7 +214,7 @@ public:
     RulesFileLoader(boost::asio::io_service& service, const std::string& file,
         std::shared_ptr<RulesCollection>& c);
     /*
-     загрука данных из файла правил, установка signal_hook
+    Loading data from a rules file, setting signal_hook
     */
     void start();
 private:
@@ -222,13 +222,13 @@ private:
     std::string rules_config_file_;
     std::shared_ptr<RulesCollection>& collect_;
     /*
-     функция чтения данных из файла rules_config_file_.
-     Читает данные и вносит правила в коллекцию collect_.
+     Function for reading data from the file rules_config_file_.
+     Reads data and enters rules into the collect_ collection.
     */
     void reload_config();
     /*
-     асинхронный обработчик сигнала SIGHUP, вызывает функцию чтения данных
-     из конфига reload_config()
+     Asynchronous SIGHUP signal handler, calls the data read function
+     From config reload_config ()
     */
     void sig_hook(boost::asio::signal_set& this_set_,
         boost::system::error_code error, int signal_number);

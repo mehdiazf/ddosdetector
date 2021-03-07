@@ -178,9 +178,28 @@ TcpRule& TcpRule::operator+=( TcpRule& other)
         count_packets += other.count_packets;
         count_bytes += other.count_bytes;
         dst_top += other.dst_top;
-        // сбрасываем счетчик у исходного правила
+        // Reset the counter for the original rule
         other.count_packets = 0; 
         other.count_bytes = 0;
     }
     return *this;
+}
+std::string tcp_flags::get_flags(){
+    
+    std::string txt="";
+    for(int i=0;i<6;i++){
+        txt+=(bits_[i])?std::string (1,tcprule::accept_tcp_flags[i]):"";        
+    }
+    return txt;
+    
+}
+std::string TcpRule::get_description(){
+    
+    std::string flg="";
+    flg=flags.get_flags();
+    return ( ((src_port.stat())?("src_port:" + src_port.to_range()):"") + 
+             ((dst_port.stat())?("dst_port:" + dst_port.to_range()):"") + 
+             ((len.stat()?("Length:" + len.to_str()):"")) + ((flg.length()==0)?"":flg) );
+    
+    
 }

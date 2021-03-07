@@ -12,7 +12,7 @@
 #include "baserule.hpp"
 
 /*
- Класс параметров IPv4 заголовка
+ IPv4 Header Option Class
 */
 class Ipv4Rule
 {
@@ -29,7 +29,7 @@ public:
     NumRange<uint32_t> ip_dst;  // Destination ip
 
     explicit Ipv4Rule(uint8_t proto);
-    // Парсинг параметров IP пакета
+    // Parsing IP packet parameters
     void ip_header_parse(const boost::program_options::variables_map& vm);
 };
 

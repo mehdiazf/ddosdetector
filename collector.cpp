@@ -113,23 +113,23 @@ void NetmapReceiver::netmap_thread(struct nm_desc* nm_descr, int thread_number,
     try
     {
         for (;;)
-        {   // Проверям был ли прерван поток
+        {   // Check if the stream was interrupted
             boost::this_thread::interruption_point(); 
-            // ждем 1000 микросекунд и проверяем появились ли данные
+            // Wait 1000 microseconds and check if the data has appeared
             if(poller.try_poll())
             {
-                // получаем данные пакетов
+                // Get packet data
                 while( (buf = poller.get_buff_from_ring()) )
                 {
-                    // если пакет подпадает под правило, то перерасываем его
-                    // в host stack для ОС
+                    // If the packet matches the rule, then we redistribute it
+                    // in the host stack for the OS
                     if(check_packet(buf, collect, poller.buff_len))
                     {
-                        // в host stack перебрасываем только пакеты из ring 0
-                        // (thread id 0), так как функционал netmap: NS_FORWARD
-                        // не потокобезопасен, и в противном случае течет память
-                        // для мониторинга и дампов достаточно проброса пакетов
-                        // только из одной очереди
+                        // In the host stack we transfer only packets from ring 0
+                        // (thread id 0), as netmap functionality: NS_FORWARD
+                        // not thread safe and memory leaks otherwise
+                        // for monitoring and dumps, packet forwarding is enough
+                        // only from one queue
                         if(thread_number == 0)
                         {
                             poller.set_forward();
@@ -160,9 +160,9 @@ NetmapReceiver::NetmapReceiver(std::string interface, boost::thread_group& threa
     sysctl(mib, 2, &num_cpus_, &len, NULL, 0);
 #elif defined(__linux__)
     /*
-      количество ядер в системе (чтобы привязать каждую очередь
-      сетевой карты к отдельному ядру).
-      TODO: проверить std::thread::hardware_concurrency() верней?
+      The number of cores in the system (to bind each queue
+      Network card to a separate kernel).
+      TODO: check std :: thread :: hardware_concurrency () is correct?
     */
     num_cpus_ = sysconf(_SC_NPROCESSORS_ONLN);
 #else /* others */
@@ -197,9 +197,9 @@ void NetmapReceiver::start()
         logger.warn("number of ring queues (%d) greater than the number of processor cores (%d), the collector may not work best", num_rings, num_cpus_);
     }
     /*
-        переключение сетевой карты на работу с драйвером
-        netmap требует времени (сетевая карта сбрасывается),
-        ждем 2 секунды.
+        Switching the network card to work with the driver
+        Netmap takes time (the network card is discarded),
+        Wait 2 seconds.
     */
     int wait_link = 2;
     logger.info("Wait %d seconds for NIC reset", wait_link);

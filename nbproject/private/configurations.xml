@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="docs">
+        <df name="images">
+        </df>
+      </df>
+      <df name="lib">
+        <in>queue.hpp</in>
+      </df>
+      <df name="proto">
+        <in>baserule.cpp</in>
+        <in>baserule.hpp</in>
+        <in>icmp.cpp</in>
+        <in>icmp.hpp</in>
+        <in>ip.cpp</in>
+        <in>ip.hpp</in>
+        <in>tcp.cpp</in>
+        <in>tcp.hpp</in>
+        <in>udp.cpp</in>
+        <in>udp.hpp</in>
+      </df>
+      <df name="scripts">
+      </df>
+      <df name="sys">
+        <df name="net">
+          <in>netmap.h</in>
+          <in>netmap_legacy.h</in>
+          <in>netmap_user.h</in>
+        </df>
+      </df>
+      <df name="test">
+      </df>
+      <in>action.cpp</in>
+      <in>action.hpp</in>
+      <in>collector.cpp</in>
+      <in>collector.hpp</in>
+      <in>controld.cpp</in>
+      <in>controld.hpp</in>
+      <in>ddosdetector.cpp</in>
+      <in>exceptions.cpp</in>
+      <in>exceptions.hpp</in>
+      <in>functions.cpp</in>
+      <in>functions.hpp</in>
+      <in>influxdb.cpp</in>
+      <in>influxdb.hpp</in>
+      <in>parser.cpp</in>
+      <in>parser.hpp</in>
+      <in>rules.cpp</in>
+      <in>rules.hpp</in>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>

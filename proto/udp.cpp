@@ -97,3 +97,12 @@ UdpRule& UdpRule::operator+=( UdpRule& other)
     }
     return *this;
 }
+
+std::string UdpRule::get_description(){
+    
+    return ( ((src_port.stat())?("src_port:" + src_port.to_range()):"") + 
+             ((dst_port.stat())?("dst_port:" + dst_port.to_range()):"") + 
+             ((len.stat())?("Length:") + len.to_str():"") );
+    
+    
+}

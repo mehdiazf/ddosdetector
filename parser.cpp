@@ -48,7 +48,7 @@ namespace parser
         return res;
     }
 
-    // Функции parser::
+    // Parser functions ::
     std::pair<uint32_t, uint32_t> range_from_ip_string(const std::string& ipstr)
     {
         try

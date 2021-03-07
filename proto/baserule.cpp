@@ -112,6 +112,11 @@ NumRange<T>& NumRange<T>::operator=(const std::pair<T, T>& p)
 
 // class NumComparable
 template<class T>
+bool NumComparable<T>::stat() const
+{
+    return enable_;
+}
+template<class T>
 NumComparable<T>::NumComparable()
     : num_(0), enable_(false), type_(0) {}
 template<class T>
@@ -183,7 +188,7 @@ void BaseRule::BaseRule_parse(const boost::program_options::variables_map& vm)
     if (vm.count("next")) {
         next_rule = vm.count("next");
     }
-    // проверка обязательных параметров
+    // Checking required parameters
     if(pps_trigger == 0 && bps_trigger == 0)
         throw ParserException("pps or bps trigger will be set");
     if(pps_trigger > 0 && pps_trigger_period < 1)
@@ -194,7 +199,7 @@ void BaseRule::BaseRule_parse(const boost::program_options::variables_map& vm)
 bool BaseRule::is_triggered()
 {
     std::time_t cur_time = std::time(0);
-    // триггер пакетов
+    // Packet trigger
     if(pps_trigger > 0)
     {
         if(pps > pps_trigger)
@@ -202,8 +207,8 @@ bool BaseRule::is_triggered()
             // if (current time - last good check) > trigger piriod
             if((cur_time - pps_last_not_triggered) > pps_trigger_period) 
             {
-                pps_last_not_triggered = cur_time; // чтобы триггер срабатывал один раз в период
-                if(dst_top.size() > 0) // если адрес назначения известен
+                pps_last_not_triggered = cur_time; // So that the trigger fires once in a period
+                if(dst_top.size() > 0) // If the destination is known
                 {
                     return true;
                 }
@@ -214,7 +219,7 @@ bool BaseRule::is_triggered()
             pps_last_not_triggered = cur_time;
         }
     }
-    // триггер байтов
+    // Trigger bytes
     if(bps_trigger > 0)
     {
         if(bps > bps_trigger)
@@ -236,7 +241,7 @@ bool BaseRule::is_triggered()
     }
     return false;
 }
-std::string BaseRule::get_job_info() const
+std::string BaseRule::get_job_info(std::string txt) const
 {
     
     // std::string info = std::to_string(count_packets) + "|"
@@ -248,7 +253,7 @@ std::string BaseRule::get_job_info() const
     // return info;
     
 
-    std::string info = rule_type + "|"
+    std::string info = rule_type + "|" + txt + "|"
         + dst_top.get_max()
         + (comment == "" ? "" : "|" + comment)/* + "|"
         + (ip_src.stat() ? ip_src.to_cidr() : "") + "|"

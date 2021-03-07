@@ -14,14 +14,14 @@
 
 namespace tcprule
 {
-    // текстовое представление TCP флагов в правильном порядке, для
-    // парсинга правил
+    // Textual representation of TCP flags in the correct order, for
+    // parsing rules
     const std::vector<char> accept_tcp_flags = { 'U', 'A', 'P', 'R', 'S', 'F' };
 }
 
 /*
- Класс TCP флагов, позволяет производить сравнение всех флагов (bits_) сразу с
- использованием маски (mask_)
+ TCP flags class, allows you to compare all flags (bits_) at once with
+ Using mask (mask_)
 */
 class tcp_flags
 {
@@ -29,20 +29,21 @@ public:
     tcp_flags();
     tcp_flags(const std::pair<std::bitset<6>, std::bitset<6>>& flags);
     bool operator==(const tcp_flags& other) const;
-    // сравнение битов flags с параметром bits_ по маске mask_
+        // Comparison of bits in flags with parameter bits_ by mask mask_
     bool in_this(const std::bitset<6>& flags) const;
+    std::string get_flags();
 
     bool enable;
 private:
-    // биты флагов
+    // Flag bits
     std::bitset<6> bits_;
-    // маска сравнения
+    // Comparison mask
     std::bitset<6> mask_;
 };
 
 /*
- Класс TCP правил. Содержит проверяемые параметры пакета и также стандартный
- набор методов для proto-класса.
+ Class of TCP rules. Contains the verifiable parameters of the package and also the standard
+ A set of methods for the proto class.
 */
 class TcpRule : public Ipv4Rule, public BaseRule
 {
@@ -50,10 +51,11 @@ public:
     TcpRule();
     explicit TcpRule(const std::vector<std::string>& tkn_rule);
     bool operator==(const TcpRule& other) const;
+    std::string get_description();    
     TcpRule& operator+=(TcpRule& other);
-    // парсинг текстового представления правила по правилам opt
+    // Parsing the text representation of the rule according to the opt rules
     void parse(const boost::program_options::options_description& opt);
-    // проверка L4 заголовка пакета на совпадение с правилом
+    // Checking the L4 packet header for a rule match
     bool check_packet(const struct tcphdr *tcp_hdr,
                       const uint32_t s_addr,
                       const uint32_t d_addr) const;

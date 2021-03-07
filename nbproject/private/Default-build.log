@@ -1,0 +1,15 @@
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c exceptions.cpp -o exceptions.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c functions.cpp -o functions.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c collector.cpp -o collector.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c parser.cpp -o parser.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c action.cpp -o action.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c influxdb.cpp -o influxdb.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c controld.cpp -o controld.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c proto/baserule.cpp -o baserule.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c proto/ip.cpp -o ip.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c proto/tcp.cpp -o tcp.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c proto/udp.cpp -o udp.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c proto/icmp.cpp -o icmp.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   -c rules.cpp -o rules.o -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 
+g++-4.8  -std=c++11 -Wall  -I ./sys -I ./proto    -c -o ddosdetector.o ddosdetector.cpp
+g++-4.8 -std=c++11 -Wall  -I ./sys -I ./proto   exceptions.o functions.o collector.o parser.o action.o influxdb.o controld.o baserule.o ip.o tcp.o udp.o icmp.o rules.o ddosdetector.o -o ddosdetector -L /usr/local/lib  -lboost_system -pthread  -lboost_thread  -llog4cpp -lnsl  -lboost_program_options -lcurl 

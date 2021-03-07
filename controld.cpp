@@ -25,7 +25,7 @@ void ControlSession<T>::do_read()
 {
     do_write(cli_);
     auto self(this->shared_from_this());
-    memset(data_, 0, max_length); // зануляем буфер
+    memset(data_, 0, max_length); // Zero the buffer
     socket_.async_read_some(buffer(data_, max_length-1),
         [this, self](boost::system::error_code ec, std::size_t length)
         {
@@ -34,7 +34,7 @@ void ControlSession<T>::do_read()
                 cmd_ += std::string(data_);
                 if(cmd_.find('\n') != std::string::npos)
                 {
-                    for(char& c: bad_symbols_) // удаляем символы \n \r и т.д.
+                    for(char& c: bad_symbols_) // Remove characters  n  r, etc.
                         cmd_.erase(std::remove(cmd_.begin(), cmd_.end(), c),
                                    cmd_.end());
                     try
@@ -53,7 +53,7 @@ void ControlSession<T>::do_read()
     );
 }
 template<class T>
-void ControlSession<T>::do_read_signal() // FUTURE: добавить отлов сигнала Ctrl^D
+void ControlSession<T>::do_read_signal() // FUTURE: add catch signal Ctrl% D
 {
     auto self(this->shared_from_this());
     memset(data_, 0, max_length);

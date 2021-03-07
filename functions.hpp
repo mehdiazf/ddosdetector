@@ -26,52 +26,52 @@
 #include "log4cpp/PatternLayout.hh"
 
 /*
- инициализация логера logger, определение уровня логирования и цели
- куда будет писаться лог.
- @param debug: режим отладки
- @param file: файл куда писать лог, если =="", то вывод в консоль
+ Initialization of the logger logger, determination of the logging level and purpose
+ Where the log will be written.
+ @param debug: debug mode
+ @param file: file where to write the log, if == ', then output to the console
 */
 void init_logging(log4cpp::Category& logger, bool debug,
                   const std::string& file);
 /*
- переключение сетевой карты в режим promisc on
+ Switching the network card to promisc on mode
 */
 #ifdef __linux__
 bool manage_interface_promisc_mode(const std::string& interface_name,
                                    bool switch_on);
 #endif
 /*
- преобразует имя интерфейса в netmap формат, т.е. из eth5 сделает
- netmap:eth5 как требуется для запуска nm_open() функции из библиотеки
- Если в названии интерфейса уже есть "netmap:", то изменения не производятся
+ Converts the interface name to netmap format, i.e. From eth5 will make
+ Netmap: eth5 as required to run nm_open () function from library
+ If the interface name already contains 'netmap:', then no changes are made
 */
 std::string get_netmap_intf(const std::string& intf);
 /*
- проверяет существует ли файл, проверка выполняется через unix stat
+ Checks if a file exists, check is done via unix stat
 */
 bool is_file_exist(const std::string& file_name);
 /*
- проверяет исполняемый ли файл
+ Checks if executable file
 */
 bool is_executable(const std::string& file_name);
 /*
- форматирует строку по определенной длинне для выравнивания вывода
- @param s: строка
- @param len: минимальная длинна выходной строки
+ Formats a string to a specific length to align the output
+ @param s: string
+ @param len: minimum length of the output string
 */
 std::string format_len(const std::string& s, unsigned int len);
 /*
- делит строку input на элементы по признаку separator и формирует
- результат в vector<string>
+ Divides the input string into elements based on separator and forms
+ Result in vector <string>
 */
 typedef boost::escaped_list_separator<char> separator_type;
 std::vector<std::string> tokenize(const std::string& input,
                                   const separator_type& separator);
 std::vector<std::string> tokenize(const std::string& input);
 /*
- возвращает номер элемента value в списке vec, или вызывает исключение
- @param vec: вектор в котором искать элемент
- @param value: элемент который необходимо искать
+ Returns the number of value in the vec list, or throws an exception
+ @param vec: the vector in which to search for an element
+ @param value: the element to search for
 */
 template<typename T>
 int get_index(const std::vector<T>& vec, const T& value)

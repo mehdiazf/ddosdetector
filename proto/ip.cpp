@@ -12,7 +12,7 @@ void Ipv4Rule::ip_header_parse(const boost::program_options::variables_map& vm)
     if (vm.count("dstip")) {
         ip_dst = parser::range_from_ip_string(vm["dstip"].as<std::string>());
     }
-    // проверка обязательных параметров
+        // Checking required parameters
     if(!ip_src.stat() && !ip_dst.stat())
         throw ParserException("destination ip or source ip will be set");
 }

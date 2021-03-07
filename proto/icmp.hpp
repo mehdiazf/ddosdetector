@@ -15,8 +15,8 @@
 #include "ip.hpp"
 
 /*
- Класс ICMP правил. Содержит проверяемые параметры пакета и также стандартный
- набор методов для proto-класса.
+ ICMP rules class. Contains the verifiable parameters of the package and also the standard
+ A set of methods for the proto class.
 */
 class IcmpRule : public Ipv4Rule, public BaseRule
 {
@@ -24,10 +24,11 @@ public:
     IcmpRule();
     explicit IcmpRule(const std::vector<std::string>& tkn_rule);
     bool operator==(const IcmpRule& other) const;
+    std::string get_description();    
     IcmpRule& operator+=(IcmpRule& other);
-    // парсинг текстового представления правила по правилам opt
+    // Parsing the text representation of the rule according to the opt rules
     void parse(const boost::program_options::options_description& opt);
-    // проверка L4 заголовка пакета на совпадение с правилом
+    // Checking the L4 packet header for a rule match
     bool check_packet(const struct icmphdr *icmp_hdr,
                       const uint32_t s_addr,
                       const uint32_t d_addr) const;
