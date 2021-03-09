@@ -1,5 +1,41 @@
 #include "baserule.hpp"
 
+namespace Comperator{    
+  bool cmp_byte(const std::pair<uint32_t, Counter>& a, const std::pair<uint32_t, Counter>& b)
+    { 
+    return a.second.count_bytes < b.second.count_bytes; 
+    }
+  bool cmp_packet(const std::pair<uint32_t, Counter>& a, const std::pair<uint32_t, Counter>& b)
+    { 
+    return a.second.count_packets < b.second.count_packets; 
+    }
+}
+
+// class _Counter
+Counter::Counter():count_packets(0),count_bytes(0),pps(0),bps(0),pps_not_trig(0)
+    ,bps_not_trig(0),last_update_(std::chrono::high_resolution_clock::now()){};    
+Counter& Counter::operator=(const Counter& other){
+    count_packets=other.count_packets;
+    count_bytes=other.count_bytes;
+    pps=other.pps;
+    bps=other.bps;
+    pps_not_trig=other.pps_not_trig;
+    bps_not_trig=other.bps_not_trig;
+    last_update_=other.last_update_;
+    return *this;
+}
+Counter::Counter(const Counter & other){
+    
+    count_packets=other.count_packets;
+    count_bytes=other.count_bytes; 
+    pps=other.pps;
+    bps=other.bps;
+    pps_not_trig=other.pps_not_trig;
+    bps_not_trig=other.bps_not_trig;
+    last_update_=other.last_update_;
+            
+}
+
 // class CountersList
 template<class Key, class Val>
 CountersList<Key, Val>::CountersList() {};
@@ -10,8 +46,9 @@ CountersList<Key, Val>& CountersList<Key, Val>::operator+=(CountersList& other)
     {
         for(auto& om: other.map_)
         {
-            map_[om.first] += om.second;
-        }
+            map_[om.first].count_bytes += om.second.count_bytes;
+            map_[om.first].count_packets+=om.second.count_packets;                        
+        }            
         other.clear();
     }
     return *this;
@@ -20,7 +57,7 @@ template<class Key, class Val>
 void CountersList<Key, Val>::print() const
 {
     for(auto& m: map_) {
-        std::cout << "first: " << m.first << " second: " << m.second << std::endl;
+        std::cout << "first: " << m.first << " second: " << m.second.count_packets << std::endl;
     }
 }
 template<class Key, class Val>
@@ -36,25 +73,101 @@ void CountersList<Key, Val>::clear()
 template<class Key, class Val>
 void CountersList<Key, Val>::increase(const Key& k)
 {
-    map_[k]++;
+    map_[k].count_packets++;
 }
-// template<class Key, class Val>
-// void CountersList<Key, Val>::increase(const Key& k, const Val& v)
-// {
-//     map_[k] += v;
-// }
+template<class Key, class Val>
+void CountersList<Key, Val>::_increase(const Key& k, const unsigned int len)
+{
+    
+    auto it= map_.find(k);
+    if(it != map_.end()){
+    
+     map_[k].count_bytes+=len;
+     map_[k].count_packets++;
+    }
+    else
+    {
+    Counter tmp;
+    tmp.count_bytes=len;
+    tmp.count_packets++;
+    map_[k]=tmp;        
+    }    
+}
 template<class Key, class Val>
 std::string CountersList<Key, Val>::get_max() const
 {
-    std::pair<Key, Val> max_val = {0, 0};
+    std::pair<Key, Counter> max_val;
     for(auto& m: map_)
-    {
-        if(m.second > max_val.second)
+    {   
+        if(m.second.count_packets > max_val.second.count_packets)
         {
             max_val = m;
         }
     }
     return boost::asio::ip::address_v4(max_val.first).to_string();
+}
+template<class Key, class Val>
+void CountersList<Key,Val>::calc_delta(const CountersList& old){
+    
+    double delta_time;
+    for(auto &om: old.map_){
+        auto it=map_.find(om.first);
+        if(it != map_.end()){
+         delta_time = std::chrono::duration<double, std::milli>(
+                map_[om.first].last_update_ - om.second.last_update_).count();
+         map_[om.first].bps= round( ((map_[om.first].count_bytes - om.second.count_bytes)/delta_time) *1000 );
+         map_[om.first].pps= round( ((map_[om.first].count_packets - om.second.count_packets)/delta_time) *1000 );
+        }
+        
+    }    
+}
+template<class Key, class Val>
+std::vector<std::string> CountersList<Key,Val>::get_ip_list(uint32_t pps_trig, unsigned int pps_period, uint32_t bps_trig, unsigned int bps_period){
+  
+    std::time_t cur_time = std::time(0);
+    std::vector<std::pair<uint32_t, Counter> > A;
+    std::vector<std::string> B;
+    // Packet trigger
+    if(pps_trig > 0)
+    {
+        
+        for(auto& it: map_)
+            A.push_back(it);
+        
+        std::sort(A.begin(),A.end(),Comperator::cmp_packet);        
+        for(int i=A.size()-1; i>=0;i--)
+        {              
+            if(A[i].second.pps > pps_trig)
+            {                                                        
+                
+                if((cur_time - A[i].second.pps_not_trig) > (std::time_t) pps_period)                    
+                        A[i].second.pps_not_trig = cur_time; // So that the trigger fires once in a period                                                            
+                B.push_back(boost::asio::ip::address_v4(A[i].first).to_string());                   
+            }
+            else
+                return B;
+        }
+    }       
+    // Trigger bytes
+    if(bps_trig > 0)
+    {        
+        for(auto& it: map_)
+            A.push_back(it);
+        std::sort(A.begin(),A.end(),Comperator::cmp_byte);        
+        for(int i=A.size()-1; i>=0;i--)
+        {        
+            if(A[i].second.bps > bps_trig)
+            {                
+                if((cur_time - A[i].second.bps_not_trig) > (std::time_t) bps_period)                 
+                    A[i].second.bps_not_trig = cur_time;               
+                B.push_back(boost::asio::ip::address_v4(A[i].first).to_string());                   
+            }
+            else
+                return B;
+               
+        }           
+    }
+    return B;
 }
 
 // class NumRange
@@ -205,7 +318,7 @@ bool BaseRule::is_triggered()
         if(pps > pps_trigger)
         {
             // if (current time - last good check) > trigger piriod
-            if((cur_time - pps_last_not_triggered) > pps_trigger_period) 
+            if((cur_time - pps_last_not_triggered) > (std::time_t) pps_trigger_period) 
             {
                 pps_last_not_triggered = cur_time; // So that the trigger fires once in a period
                 if(dst_top.size() > 0) // If the destination is known
@@ -225,7 +338,7 @@ bool BaseRule::is_triggered()
         if(bps > bps_trigger)
         {
             // if (current time - last good check) > trigger piriod
-            if((cur_time - bps_last_not_triggered) > bps_trigger_period) 
+            if((cur_time - bps_last_not_triggered) > (std::time_t) bps_trigger_period) 
             {
                 bps_last_not_triggered = cur_time; // чтобы триггер срабатывал один раз в период
                 if(dst_top.size() > 0) // если адрес назначения известен
@@ -240,6 +353,23 @@ bool BaseRule::is_triggered()
         }
     }
     return false;
+}
+void BaseRule::calc_delta(const BaseRule & old){
+    
+    dst_top.calc_delta(old.dst_top);
+    
+}
+void BaseRule::get_ip_list(std::vector<std::string> & vect,std::string description){
+     
+    std::vector<std::string> tmp = dst_top.get_ip_list(pps_trigger,pps_trigger_period,bps_trigger,bps_trigger_period);   
+    std::string info;
+    for(unsigned int i=0; i< tmp.size();i++){
+        info = rule_type + "|" + ((description.length()>0)?(description):"|")
+        + tmp[i]
+        + (comment == "" ? "" : "|" + comment);
+        vect.push_back(info);        
+    }
+    
 }
 std::string BaseRule::get_job_info(std::string txt) const
 {

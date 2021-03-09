@@ -67,11 +67,13 @@ void RulesList<T>::calc_delta(const RulesList& rules_old)
             for(unsigned int i=0; i < rules_.size(); i++)
             {
                 // Count the delta packet / sec
-                delta_c = rules_[i].count_packets - rules_old.rules_[i].count_packets;
-                rules_[i].pps = round((delta_c / delta_time) * 1000);
+                delta_c = rules_[i].count_packets - rules_old.rules_[i].count_packets;               
+                rules_[i].pps = round((delta_c / delta_time) * 1000);                
                 // Count delta bytes / sec
                 delta_c = rules_[i].count_bytes - rules_old.rules_[i].count_bytes;
                 rules_[i].bps = round((delta_c / delta_time) * 1000);
+                //if(rules_[i].is_triggered())
+                  rules_[i].calc_delta(rules_old.rules_[i]);
             }
         }
     }
@@ -94,6 +96,28 @@ void RulesList<T>::check_triggers(ts_queue<action::TriggerJob>& task_list,
         r.dst_top.clear();
     }
 }
+//####
+template<class T>
+void RulesList<T>::_check_triggers(ts_queue<action::TriggerJob>& task_list,
+    InfluxClient& influx)
+{
+    boost::lock_guard<boost::shared_mutex> guard(m_);
+    for(auto& r: rules_)
+    {
+        if(r.is_triggered()) // If the trigger is fired
+        {
+            std::vector<std::string> _list;
+            r.get_ip_list(_list,r.get_description());             
+            for(int i=0; i<_list.size();i++)                
+               task_list.push(action::TriggerJob(r.act,_list[i]));
+            // Send event to the database
+            //influx.insert(r.get_trigger_influx());
+        }
+        // We clear the check counters so as not to clog the memory
+        r.dst_top.clear();
+    }
+}
+//####
 template<class T>
 void RulesList<T>::add_rule(T rule)
 {
@@ -314,9 +338,12 @@ void RulesCollection::calc_delta(const RulesCollection& old)
 void RulesCollection::check_triggers(ts_queue<action::TriggerJob>& task_list,
     InfluxClient& influx)
 {
-    tcp.check_triggers(task_list, influx);
-    udp.check_triggers(task_list, influx);
-    icmp.check_triggers(task_list, influx);
+    tcp._check_triggers(task_list, influx);
+    udp._check_triggers(task_list, influx);
+    icmp._check_triggers(task_list, influx);
+    //tcp.check_triggers(task_list, influx);
+    //udp.check_triggers(task_list, influx);
+    //icmp.check_triggers(task_list, influx);
 }
 
 

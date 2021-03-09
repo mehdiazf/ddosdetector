@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include <map>
 
 #include <boost/program_options.hpp>
@@ -10,12 +11,31 @@
 #include "../action.hpp"
 #include "../parser.hpp"
 
-
+class Counter
+{
+ public:
+    Counter();
+    Counter(const Counter& other);
+    Counter& operator=(const Counter& other);
+    uint64_t count_packets;
+    uint64_t count_bytes;
+    uint64_t pps;
+    uint64_t bps;
+    std::time_t pps_not_trig;
+    std::time_t bps_not_trig;
+    std::chrono::high_resolution_clock::time_point last_update_;
+    
+};
+namespace Comperator{
+    
+    bool cmp_byte(const std::pair<uint32_t, Counter>& a, const std::pair<uint32_t, Counter>& b);    
+    bool cmp_packet(const std::pair<uint32_t, Counter>& a, const std::pair<uint32_t, Counter>& b);    
+}
 template<class Key, class Val>
 class CountersList
 {
 public:
-    CountersList();
+    CountersList();    
     CountersList& operator+=(CountersList& other);
     // List output (debug)
     void print() const;
@@ -25,11 +45,16 @@ public:
     void clear();
     // Increment the counter of element k by 1 or v
     void increase(const Key& k);
+    void _increase(const Key & k, const unsigned int len);
     //void increase(const Key& k, const Val& v);
     // Returns the name of the largest counter
     std::string get_max() const;
+    void calc_delta(const CountersList& old);
+    std::vector<std::string> get_ip_list(uint32_t pps_trig,
+    unsigned int pps_period, uint32_t bps_trig, unsigned int bps_period);
+    
 private:
-    std::map<Key, Val> map_;
+    std::map<Key,Counter> map_;
 };
 /*
  Numeric period class. Used to store some kind of restriction
@@ -107,7 +132,10 @@ public:
     std::string get_job_info(std::string txt) const;
     // Generating a request to the InfluxDB database for a triggered trigger
     std::string get_trigger_influx() const;
-
+    //calc data per ip
+    void calc_delta(const BaseRule& old);
+    void get_ip_list(std::vector<std::string> & vct,std::string desctiption);
+    
     // Basic rule parameters
     std::string rule_type;                             // Textual representation of the rule type (tcp, udp, etc.)
     std::string text_rule;                        // Text of the rule

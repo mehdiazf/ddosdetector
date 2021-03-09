@@ -67,6 +67,9 @@ public:
     */
     void check_triggers(ts_queue<action::TriggerJob>& task_list,
         InfluxClient& influx);
+    
+    void _check_triggers(ts_queue<action::TriggerJob>& task_list,  //###############################33
+        InfluxClient& influx);
     /*
      Checking rule triggers, setting jobs to the job processor.
      @param task_list: reference to the task queue of the handler;
@@ -93,7 +96,7 @@ public:
      Received packet of type T.
      @param l4header: packet with stripped ip and ethernet headers
      @param s_addr: source ip address
-     @param d_addr: destination ip address
+     @param d_addr: destination ip address 
      @param len: whole packet size (with ip and ethernet headers)
     */
     template<typename H>
@@ -102,12 +105,13 @@ public:
     {
         boost::lock_guard<boost::shared_mutex> guard(m_);
         for(auto& r: rules_)
-        {
-            if(r.check_packet(l4header, s_addr, d_addr))
-            {
+        {            
+            if(r.check_packet(l4header, s_addr, d_addr))               
+            {                     
                 r.count_packets++;
                 r.count_bytes += len;
-                r.dst_top.increase(d_addr);
+                //r.dst_top.increase(d_addr);
+                r.dst_top._increase(d_addr,len);
                 if(!r.next_rule)
                 {
                     return true;
@@ -193,7 +197,7 @@ public:
      @param task_list
     */
     void check_triggers(ts_queue<action::TriggerJob>& task_list,
-        InfluxClient& influx);
+        InfluxClient& influx);    
 private:
     std::vector<std::string> types_;
     boost::program_options::options_description help_;

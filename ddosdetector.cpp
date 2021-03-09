@@ -65,6 +65,7 @@ void watcher(std::vector<std::shared_ptr<RulesCollection>>& collect,
         {
             // check triggers
             main_collect->check_triggers(*task_list, *influx);
+            
         }
         else
         {
