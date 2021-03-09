@@ -1,34 +1,74 @@
-# Принцип работы системы (dev) #
-## Потоки ##
+# How the system works (dev) #
+## Streams ##
 ![ddosdetector](images/dev-scheme.png)
 
-Основной поток демона (**main**) создает несколько видов потоков для разных задач:
+The main thread of the daemon (**main**) creates several types of threads for
+different tasks:
 
-* потоки-обработчики пакетов **netmap receiver** (их количество равно количеству rxring очередей сетевой карты);
-* поток **watcher**;
-* поток **task runner**;
-* поток **controld**.
+* packet handler threads **netmap receiver** (their number is equal to the
+number of rxring queues of the network card);
+* stream **watcher**;
+* thread **task runner**;
+* flow **controld**.
 
-Потоки-обработчики **netmap receiver** создаются по одному на каждую кольцевую очередь (*rxring*) входящих пакетов сетевой карты. Вычисление доступного количества очередей и создание потоков выполняет класс *NetmapReceiver* (файл *collector.hpp*). Каждый поток *netmap receiver*, независимо от других, обрабатывает свои пакеты из своей очереди и проверяет их по отдельной копии правил (класс *RulesCollection* файл *rules.cpp*). Отдельная копия правил для каждого потока позволяет избежать излишних блокировок при проверке пакетов (если сделать одну потокобезопасную версию коллекции правил на все потоки, то пока один поток работает с этой коллекцией, остальные будут ждать). Поток *netmap receiver* только проверяет полученные пакеты по правилам и увеличивает счетчики в своей копии коллекции правил, проверкой триггеров, вычислением дельт счетчиков, выполнением заданий занимаются другие потоки. То есть потоки-обработчики тратят процессорное время только на максимально быстрый разбор пакетов из очередей сетевой карты.
+The **netmap receiver** handler threads are created one for each ring queue
+(*rxring*) of incoming network card packets. The *NetmapReceiver* class (the
+*collector.hpp*file) calculates the available number of queues and creates
+threads. Each *netmap receiver* thread, independently of the others, processes
+its packets from its queue and checks them against a separate copy of the rules
+(the *RulesCollection* file *class rules.cpp*). A separate copy of the rules for
+each thread allows you to avoid unnecessary locks when checking packets (if you
+make one thread-safe version of the rules collection for all threads, then while
+one thread is working with this collection, the rest will wait). The *netmap
+receiver* thread only checks the received packets against the rules and
+increments the counters in its copy of the rules collection, while other threads
+check triggers, calculate counter deltas, and perform tasks. That is, the
+processor threads spend CPU time only on the fastest possible parsing of packets
+from the network card queues.
 
-Поток **watcher** (функция *wathcer()* в файле *ddosdetector.cpp*) выполняет несколько задач:
+Stream **watcher** (function *wathcer()* in the file *ddosdetector.cpp*)
+performs multiple tasks:
 
-* следит за актуальностью коллекций правил у потоков-обработчиков netmap receiver;
-* актуализирует коллекции правил потоков-обработчиков;
-* просчитывает дельта-значения счетчиков (байт в секунду, пакетов в секунду);
-* проверяет триггеры правил и добавляет задания триггеров в очередь заданий.
+* keeps the rule collections up-to-date for netmap receiver handler threads;
+* updates collections of thread-handler rules;
+* calculates the delta values of the counters (bytes per second, packets per
+second);
+* checks rule triggers and adds trigger jobs to the job queue.
 
-Для проверки коллекций потоков-обработчиков, поток watcher работает с вектором содержащим shared_ptr указатели на эти коллекции. Проверка актуальности коллекций правил выполняется раз в секунду. Коллекция правил каждого потока-обработчика сравнивается с эталонной коллекцией и если они различаются, коллекция потока-обработчика обновляется. Также эталонная коллекция используется для хранения суммированных счетчиков со всех потоков-обработчиков, то есть эталонная коллекция содержит актуальные данные по полученному трафику. Просчет дельта-значений выполняется по эталонной коллекции (после того как счетчики были собраны со всех потоков-обработчиков). Далее, также по эталонной коллекции, выполняется проверка триггеров и если какой либо из триггеров сработал, добавляется задание TraggerAction (файл *action.hpp*) в очередь заданий. Сама очередь заданий обрабатывается другим поток - **task runner**.
+To check collections of handler threads, the watcher thread works with a vector
+containing shared_ptr pointers to these collections. The rule collections are
+checked for up-to-date once per second. The collection of rules of each handler
+thread is compared with the reference collection, and if they differ, the
+collection of the handler thread is updated. The reference collection is also
+used to store the totaled counters from all the handler threads, i.e. the
+reference collection contains up-to-date data on the received traffic. The
+delta values are calculated from the reference collection (after the counters
+have been collected from all the handler threads). Then, also using the
+reference collection, the triggers are checked, and if any of the triggers are
+triggered, the TraggerAction task (*action.hpp* file) is added to the task
+queue. The task queue itself is processed by another thread - **task runner**.
 
-Поток **task runner** ожидает задания триггера проверяя очередь заданий, как только в очереди появляется задание оно запускается. Задания запускаются фоново, поток не ждет завершения задания.     
+The **task runner** thread waits for a trigger job by checking the job queue,
+as soon as a job appears in the queue it starts. Tasks run in the background,
+and the thread does not wait for the task to finish.
 
-Поток **controld** отвечает за консоль управления системой. В этом потоке происходит запуск TCP/UNIX socket сервера. Когда пользователь подключается к консоли и вносит изменения в набора правил, изменения производятся в эталонной коллекции и только через секунду (максимум) синхронизируются по всем потокам-обработчикам.
+The **controld** thread is responsible for the system management console. This
+thread starts the TCP / UNIX socket server. When a user connects to the console
+and makes changes to the rule set, the changes are made in the reference
+collection and only after a second (maximum) are synchronized across all the
+handler threads.
 
-## Средства синхронизации и разделяемые данные ##
-Класс коллекции правил **RulesCollection** (файл *rules.hpp*), содержит набор потокобезопасных списков правил **RulesList** (файл *rules.hpp*), по одному для каждого L4 протокола. Каждый **RulesList** - это public член класса RulesCollection, работа с которым происходит напрямую. Синхронизация работы потоков выполняется на уровне каждого RulesList с помощью boost::shared_mutex. Операции: проверки пакета; обновления счетчиков; проверка триггеров - выполняются сразу со всеми элементами RulesList за одну блокировку мьютекса.
+## Synchronization tools and shared data ##
+The rules collection class **RulesCollection** (file *rules.hpp*), contains a
+set of thread-safe rule lists **RulesList** (file *rules.hpp*), one for each
+L4 protocol. Each **RulesList** is a public member of the RulesCollection
+class that is handled directly. Synchronization of the threads is performed at
+the level of each RulesList using boost::shared_mutex. Operations: batch
+checks; counter updates; trigger checks-are performed immediately with all
+RulesList elements in a single mutex lock.
 
-## Файлы ##
-Проект имеет следующую файловую структуру
+## Files ##
+The project has the following file structure
 ```bash
 $ tree
 .
@@ -40,8 +80,8 @@ $ tree
 ├── controld.hpp
 ├── ddosdetector.cpp
 ├── docs
-│   ├── EXAMPLE_RULES.md
-│   └── INFLUXDB.md
+│ ├── EXAMPLE_RULES.md
+│ └── INFLUXDB.md
 ├── exceptions.cpp
 ├── exceptions.hpp
 ├── functions.cpp
@@ -49,48 +89,66 @@ $ tree
 ├── influxdb.cpp
 ├── influxdb.hpp
 ├── lib
-│   └── queue.hpp
+│ └── queue.hpp
 ├── Makefile
 ├── parser.cpp
 ├── parser.hpp
 ├── proto
-│   ├── baserule.cpp
-│   ├── baserule.hpp
-│   ├── icmp.cpp
-│   ├── icmp.hpp
-│   ├── ip.cpp
-│   ├── ip.hpp
-│   ├── tcp.cpp
-│   ├── tcp.hpp
-│   ├── udp.cpp
-│   └── udp.hpp
+│ ├── baserule.cpp
+│ ├── baserule.hpp
+│ ├── icmp.cpp
+│ ├── icmp.hpp
+│ ├── ip.cpp
+│ ├── ip.hpp
+│ ├── tcp.cpp
+│ ├── tcp.hpp
+│ ├── udp.cpp
+│ └── udp.hpp
 ├── README.md
 ├── rules.cpp
 ├── rules.hpp
 ├── scripts
-│   └── send-dump.py
+│ └── send-dump.py
 ├── sys
-│   └── net
-│       ├── netmap.h
-│       └── netmap_user.h
+│ └── net
+│ ├── netmap.h
+│ └── netmap_user.h
 └── test
-    └── cppcheck_suppress.cfg
+└── cppcheck_suppress.cfg
 ```
-Подробнее по заголовочным файлам:
+Learn more about header files:
 
-* **action.hpp** - классы *Action* и *TriggerJob* отвечающие за задания сработавших триггеров правил, то есть то, что и как будет выполнено когда триггер сработает;
-* **collector.hpp** - классы *NetmapPoller* и *NetmapReceiver* отвечают за работу с драйвером netmap, получение и передачу пакетов на проверку по правилам;
-* **controld.hpp** - классы *ControlSession<T>* и *ControlServer* отвечающие за консоль управления, создание TCP/UNIX socket сервера, разбор полученных команд;
-* **ddosdetector.cpp - основной файл приложения**
-* **exceptions.hpp** - классы исключений, вынесены в отдельный файл, чтобы можно было использовать как библиотеку в других модулях, где могут происходить эти исключения;
-* **functions.hpp** - набор общих функций (преобразование строк, инициализация лога и т.д.);
-* **lib/queue.hpp** - класс *ts_queue<T>* потокобезопасной очереди, используется для организации очереди заданий триггеров
-* **parser.hpp** - класс и функции разбора/парсинга команд из консоли управления, или загруженных из файла
-* **proto/baserule.hpp** - классы *NumRange<T>*, *NumComparable<T>* и *BaseRule* это базовые классы для создания правил анализа трафика;
-* **proto/ip.hpp** - класс *Ipv4Rule* отвечает за параметры правила L3 уровня ipv4 пакета;
-* **proto/[icmp,tcp,udp].hpp** - классы параметров протоколов L4 уровня;
-* **rules.hpp** - классы *RulesList<T>*, *RulesCollection* и *RulesFileLoader* - это основные классы по работе с правилами проверки трафика, в классе *RulesList<T>* реализована защита разделяемых данных между потоками-получателями пакетов;  
-* **sys/** - системные библиотеки для работы с драйвером netmap (взяты из репозитория netmap).
-* **docs/** - каталог с документацией
-* **influxdb.hpp** - класс *InfluxClient* для работы с базой данных InfluxDB
-* **scripts/** - каталог со скриптами, которые могу вызываться системой после срабатывания триггера
+* **action.hpp** - classes *Action* and *TriggerJob* responsible for setting
+triggered rule triggers, that is, what and how will be executed when the trigger
+is triggered;
+* **collector.hpp** - the *NetmapPoller* and *NetmapReceiver* classes are
+responsible for working with the netmap driver, receiving and transmitting
+packets for checking according to the rules;
+* **controld.hpp** - classes *ControlSession<T>* and *ControlServer*
+responsible for the management console, creating a TCP/UNIX socket server,
+parsing received commands;
+* **ddosdetector.cpp -main application file**
+* **exceptions.hpp** - exception classes, placed in a separate file so that
+they can be used as a library in other modules where these exceptions can occur;
+* **functions.hpp** - a set of general functions (string conversion, log
+initialization, etc.);
+* **lib/queue.hpp** - the *ts_queue<T>* class of a thread-safe queue, used for
+queuing trigger jobs
+* **parser.hpp** - class and functions for parsing/parsing commands from the
+management console, or loaded from a file
+* **proto/baserule.hpp** - the *NumRange<T>*, *NumComparable<T>*, and
+*BaseRule* classes are the base classes for creating traffic analysis rules;
+* **proto/ip. hpp** - the *Ipv4Rule* class is responsible for the L3 rule
+parameters of the ipv4 packet layer;
+* **proto/[icmp, tcp, udp]. hpp** - L4 layer protocol parameter classes;
+* **rules.hpp** - the *RulesList<T>*, *RulesCollection*, and *RulesFileLoader*
+classes are the main classes for working with traffic validation rules.
+The *RulesList<T>* class implements protection of shared data between packet
+receiving threads;
+* **sys/** - system libraries for working with the netmap driver (taken from
+the netmap repository).
+* **docs/** - documentation directory
+* **influxdb.hpp** - class *InfluxClient* for working with the InfluxDB
+database
+* **scripts/** - directory with scripts that can be called by the system after
+the trigger is triggered
