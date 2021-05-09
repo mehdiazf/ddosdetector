@@ -108,7 +108,7 @@ void RulesList<T>::_check_triggers(ts_queue<action::TriggerJob>& task_list,
         {
             std::vector<std::string> _list;
             r.get_ip_list(_list,r.get_description());             
-            for(int i=0; i<_list.size();i++)                
+            for(unsigned int i=0; i<_list.size();i++)                
                task_list.push(action::TriggerJob(r.act,_list[i]));
             // Send event to the database
             //influx.insert(r.get_trigger_influx());
