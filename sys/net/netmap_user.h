@@ -170,7 +170,7 @@ nm_ring_space(struct netmap_ring *ring)
 #ifndef ND /* debug macros */
 /* debug support */
 #define ND(_fmt, ...) do {} while(0)
-#define D(_fmt, ...)						\
+#define NETMAP_DEBUG(_fmt, ...)					\
 	do {							\
 		struct timeval _t0;				\
 		gettimeofday(&_t0, NULL);			\
@@ -190,7 +190,7 @@ nm_ring_space(struct netmap_ring *ring)
             __cnt = 0;                                          \
         }                                                       \
         if (__cnt++ < lps) {                                    \
-            D(format, ##__VA_ARGS__);                           \
+            NETMAP_DEBUG(format, ##__VA_ARGS__);                \
         }                                                       \
     } while (0)
 #endif
@@ -497,11 +497,11 @@ win_nm_ioctl_internal(HANDLE h, int32_t ctlCode, void *arg)
 		szOut = sizeof(struct nmreq);
 		break;
 	case NIOCCONFIG:
-		D("unsupported NIOCCONFIG!");
+		NETMAP_DEBUG("unsupported NIOCCONFIG!");
 		return -1;
 
 	default: /* a regular ioctl */
-		D("invalid ioctl %x on netmap fd", ctlCode);
+		NETMAP_DEBUG("invalid ioctl %x on netmap fd", ctlCode);
 		return -1;
 	}
 
@@ -869,26 +869,26 @@ nm_open(const char *ifname, const struct nmreq *req,
 	/* optionally import info from parent */
 	if (IS_NETMAP_DESC(parent) && new_flags) {
 		if (new_flags & NM_OPEN_ARG1)
-			D("overriding ARG1 %d", parent->req.nr_arg1);
+			NETMAP_DEBUG("overriding ARG1 %d", parent->req.nr_arg1);
 		d->req.nr_arg1 = new_flags & NM_OPEN_ARG1 ?
 			parent->req.nr_arg1 : 4;
 		if (new_flags & NM_OPEN_ARG2) {
-			D("overriding ARG2 %d", parent->req.nr_arg2);
+			NETMAP_DEBUG("overriding ARG2 %d", parent->req.nr_arg2);
 			d->req.nr_arg2 =  parent->req.nr_arg2;
 		}
 		if (new_flags & NM_OPEN_ARG3)
-			D("overriding ARG3 %d", parent->req.nr_arg3);
+			NETMAP_DEBUG("overriding ARG3 %d", parent->req.nr_arg3);
 		d->req.nr_arg3 = new_flags & NM_OPEN_ARG3 ?
 			parent->req.nr_arg3 : 0;
 		if (new_flags & NM_OPEN_RING_CFG) {
-			D("overriding RING_CFG");
+			NETMAP_DEBUG("overriding RING_CFG");
 			d->req.nr_tx_slots = parent->req.nr_tx_slots;
 			d->req.nr_rx_slots = parent->req.nr_rx_slots;
 			d->req.nr_tx_rings = parent->req.nr_tx_rings;
 			d->req.nr_rx_rings = parent->req.nr_rx_rings;
 		}
 		if (new_flags & NM_OPEN_IFNAME) {
-			D("overriding ifname %s ringid 0x%x flags 0x%x",
+			NETMAP_DEBUG("overriding ifname %s ringid 0x%x flags 0x%x",
 				parent->req.nr_name, parent->req.nr_ringid,
 				parent->req.nr_flags);
 			memcpy(d->req.nr_name, parent->req.nr_name,
@@ -940,16 +940,16 @@ nm_open(const char *ifname, const struct nmreq *req,
     { /* debugging code */
 	int i;
 
-	D("%s tx %d .. %d %d rx %d .. %d %d", ifname,
+	NETMAP_DEBUG("%s tx %d .. %d %d rx %d .. %d %d", ifname,
 		d->first_tx_ring, d->last_tx_ring, d->req.nr_tx_rings,
                 d->first_rx_ring, d->last_rx_ring, d->req.nr_rx_rings);
 	for (i = 0; i <= d->req.nr_tx_rings; i++) {
 		struct netmap_ring *r = NETMAP_TXRING(d->nifp, i);
-		D("TX%d %p h %d c %d t %d", i, r, r->head, r->cur, r->tail);
+		NETMAP_DEBUG("TX%d %p h %d c %d t %d", i, r, r->head, r->cur, r->tail);
 	}
 	for (i = 0; i <= d->req.nr_rx_rings; i++) {
 		struct netmap_ring *r = NETMAP_RXRING(d->nifp, i);
-		D("RX%d %p h %d c %d t %d", i, r, r->head, r->cur, r->tail);
+		NETMAP_DEBUG("RX%d %p h %d c %d t %d", i, r, r->head, r->cur, r->tail);
 	}
     }
 #endif /* debugging */
@@ -961,7 +961,7 @@ nm_open(const char *ifname, const struct nmreq *req,
 fail:
 	nm_close(d);
 	if (errmsg[0])
-		D("%s %s", errmsg, ifname);
+		NETMAP_DEBUG("%s %s", errmsg, ifname);
 	if (errno == 0)
 		errno = EINVAL;
 	return NULL;
@@ -1000,7 +1000,7 @@ nm_mmap(struct nm_desc *d, const struct nm_desc *parent)
 	if (IS_NETMAP_DESC(parent) && parent->mem &&
 	    parent->req.nr_arg2 == d->req.nr_arg2) {
 		/* do not mmap, inherit from parent */
-		D("do not mmap, inherit from parent");
+		NETMAP_DEBUG("do not mmap, inherit from parent");
 		d->memsize = parent->memsize;
 		d->mem = parent->mem;
 	} else {
