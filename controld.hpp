@@ -84,7 +84,7 @@ public:
      @param port: the port on which the server is started (or the path to the unix socket)
      @param collect: reference collection of rules
     */
-    ControlServer(boost::asio::io_service& io_service, const std::string& port,
+    ControlServer(boost::asio::io_context& io_service, const std::string& port,
                   std::shared_ptr<RulesCollection> collect);
     // The destructor keeps track of the correct deletion of the UNIX socket file
     ~ControlServer();

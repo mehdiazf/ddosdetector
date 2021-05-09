@@ -96,7 +96,7 @@ void monitor(std::shared_ptr<RulesCollection> collect,
 /*
  Thread sends the data to the database InfluxDB, each period
 */
-void start_control(boost::asio::io_service& io_service,
+void start_control(boost::asio::io_context& io_service,
     std::string port, std::shared_ptr<RulesCollection> collect)
 {
     try
@@ -294,11 +294,11 @@ int main(int argc, char** argv) {
 
     // The main object io_service, is used to capture
     // Signals and work controld server.
-    boost::asio::io_service io_s;
+    boost::asio::io_context io_s;
 
     // Catch signals SIGINT, SIGTERM to complete the program.
     boost::asio::signal_set signals(io_s, SIGINT, SIGTERM);
-    signals.async_wait(boost::bind(&boost::asio::io_service::stop, &io_s));
+    signals.async_wait(boost::bind(&boost::asio::io_context::stop, &io_s));
 
     // Thread sheet. This list will be added to all streams of the program,
     // to monitor the condition and safely terminate

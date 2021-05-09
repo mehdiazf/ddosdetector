@@ -348,7 +348,7 @@ void RulesCollection::check_triggers(ts_queue<action::TriggerJob>& task_list,
 
 
 // class RulesFileLoader
-RulesFileLoader::RulesFileLoader(boost::asio::io_service& service,
+RulesFileLoader::RulesFileLoader(boost::asio::io_context& service,
     const std::string& file, std::shared_ptr<RulesCollection>& c)
     : sig_set_(service, SIGHUP), rules_config_file_(file), collect_(c) {}
 void RulesFileLoader::reload_config()
@@ -433,7 +433,7 @@ void RulesFileLoader::sig_hook(boost::asio::signal_set& this_set_,
         reload_config(); 
         // Add a new asynchronous job for the signal
         sig_set_.async_wait(boost::bind(&RulesFileLoader::sig_hook,
-            this, boost::ref(sig_set_), _1, _2));
+            this, boost::ref(sig_set_), boost::placeholders::_1, boost::placeholders::_2));
     }
 }
 void RulesFileLoader::start()
@@ -442,7 +442,7 @@ void RulesFileLoader::start()
     reload_config();
     // Add a new asynchronous job for the signal
     sig_set_.async_wait(boost::bind(&RulesFileLoader::sig_hook,
-        this, boost::ref(sig_set_), _1, _2));
+        this, boost::ref(sig_set_), boost::placeholders::_1, boost::placeholders::_2));
 }
 
 

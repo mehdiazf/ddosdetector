@@ -13,6 +13,7 @@
 #include <boost/asio/signal_set.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/bind/placeholders.hpp>
 
 // Logging
 #include "log4cpp/Category.hh"
@@ -215,7 +216,7 @@ public:
 class RulesFileLoader
 {
 public:
-    RulesFileLoader(boost::asio::io_service& service, const std::string& file,
+    RulesFileLoader(boost::asio::io_context& service, const std::string& file,
         std::shared_ptr<RulesCollection>& c);
     /*
     Loading data from a rules file, setting signal_hook
