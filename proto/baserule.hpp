@@ -134,7 +134,7 @@ public:
     std::string get_trigger_influx() const;
     //calc data per ip
     void calc_delta(const BaseRule& old);
-    void get_ip_list(std::vector<std::string> & vct,std::string desctiption);
+    void get_ip_list(std::vector<std::string> & vct, const std::string& description);
     
     // Basic rule parameters
     std::string rule_type;                             // Textual representation of the rule type (tcp, udp, etc.)

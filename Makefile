@@ -16,11 +16,14 @@ TESTS_RUN = $(TESTS_CPPFILES:.cpp=.run)
 
 all: $(PROGS)
 
-ddosdetector: exceptions.o functions.o collector.o parser.o action.o influxdb.o controld.o baserule.o ip.o tcp.o udp.o icmp.o rules.o  ddosdetector.o
+ddosdetector: exceptions.o functions.o collector.o parser.o action.o influxdb.o controld.o baserule.o ip.o tcp.o udp.o icmp.o rules.o client.o ddosdetector.o
 	$(CXX) $(CPPFLAGS) $^ -o $@ $(LDFLAGS)
 
 exceptions.o: exceptions.cpp
 	$(CXX) $(CPPFLAGS) -c exceptions.cpp -o exceptions.o $(LDFLAGS)
+
+client.o: client.cpp
+	$(CXX) $(CPPFLAGS) -c client.cpp -o client.o $(LDFLAGS)
 
 collector.o: collector.cpp
 	$(CXX) $(CPPFLAGS) -c collector.cpp -o collector.o $(LDFLAGS)

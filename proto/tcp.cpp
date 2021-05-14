@@ -27,7 +27,7 @@ TcpRule::TcpRule(const std::vector<std::string>& tkn_rule)
     : Ipv4Rule(6), BaseRule(tkn_rule) {}
 void TcpRule::parse(const boost::program_options::options_description& opt)
 {
-    rule_type = "tcp";
+    rule_type = "TCP";
     parser::CommandParser cp(opt);
     boost::program_options::variables_map vm = cp.parse(tokenize_rule);
     // // check conflicting

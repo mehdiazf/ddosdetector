@@ -21,6 +21,11 @@
 #include "rules.hpp"
 #include "collector.hpp"
 #include "controld.hpp"
+#include "action.hpp"
+
+// Default argument for Main process
+std::string action::Action::ip = "127.0.0.1";
+uint16_t action::Action::port = 9200;
 
 // Main logger
 log4cpp::Category& logger = log4cpp::Category::getRoot();
@@ -171,6 +176,8 @@ int main(int argc, char** argv) {
         ("Main.Rules", po::value<std::string>(&rules_file))
         ("Main.Log", po::value<std::string>(&log_file))
         ("Main.Port", po::value<std::string>(&port))
+	("Main.Main_IP",po::value<std::string>(&action::Action::ip))
+	("Main.Main_Port", po::value<uint16_t>(&action::Action::port))
         ("IndluxDB.Enable", po::value<std::string>(&influx_enable))
         ("IndluxDB.User", po::value<std::string>(&influx_user))
         ("IndluxDB.Password", po::value<std::string>(&influx_pass))
@@ -187,6 +194,7 @@ int main(int argc, char** argv) {
         ("pps-th-period", po::value<unsigned int>(), "trigger threshold period in seconds (default 10)")
         ("bps-th-period", po::value<unsigned int>(), "trigger threshold period in seconds (default 10)")
         ("action,a", po::value<std::string>(), "run action when trigger active (type:param)")
+	("filter,f", po::value<std::string>(), "filter action for mitigating anomaly (type:ratio,type:ratio,...)")
         ("comment,c", po::value<std::string>(), "comment for rule")
         ("next", "go to next rule in list")
     ;

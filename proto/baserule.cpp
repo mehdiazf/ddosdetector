@@ -280,6 +280,9 @@ BaseRule::BaseRule(const std::vector<std::string>& tkn_rule)
     pps_trigger_period(10), bps_trigger_period(10), tokenize_rule(tkn_rule) {}
 void BaseRule::BaseRule_parse(const boost::program_options::variables_map& vm)
 {
+    if(vm.count("action") && vm.count("filter")) {
+	throw ParserException("only action or filter is allowed");	
+    }
     if (vm.count("pps-th")) {
         pps_trigger = parser::from_short_size(vm["pps-th"].as<std::string>(), false);
     }
@@ -294,6 +297,9 @@ void BaseRule::BaseRule_parse(const boost::program_options::variables_map& vm)
     }
     if (vm.count("action")) {
         act = parser::action_from_string(vm["action"].as<std::string>());
+    }
+    if(vm.count("filter")) {
+	act = parser::action_from_string("filter");
     }
     if (vm.count("comment")) {
         comment = vm["comment"].as<std::string>();
@@ -359,14 +365,22 @@ void BaseRule::calc_delta(const BaseRule & old){
     dst_top.calc_delta(old.dst_top);
     
 }
-void BaseRule::get_ip_list(std::vector<std::string> & vect,std::string description){
+void BaseRule::get_ip_list(std::vector<std::string> & vect, const std::string& description){
      
     std::vector<std::string> tmp = dst_top.get_ip_list(pps_trigger,pps_trigger_period,bps_trigger,bps_trigger_period);   
     std::string info;
     for(unsigned int i=0; i< tmp.size();i++){
-        info = rule_type + "|" + ((description.length()>0)?(description):"|")
-        + tmp[i]
-        + (comment == "" ? "" : "|" + comment);
+	    if(act.is_filter()){
+		    info = "ANOMALY IP " + tmp[i] + "/32 " + "RULE " +
+			    rule_type + " " + text_rule + "\n";
+	    }
+	    else{
+
+        	info = rule_type + "|" + ((description.length()>0)?(description):"|")
+       	 	+ tmp[i]
+        	+ (comment == "" ? "" : "|" + comment);
+	    }
+
         vect.push_back(info);        
     }
     

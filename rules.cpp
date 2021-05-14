@@ -107,7 +107,7 @@ void RulesList<T>::_check_triggers(ts_queue<action::TriggerJob>& task_list,
         if(r.is_triggered()) // If the trigger is fired
         {
             std::vector<std::string> _list;
-            r.get_ip_list(_list,r.get_description());             
+            r.get_ip_list(_list, std::forward<std::string>(r.get_description()));             
             for(unsigned int i=0; i<_list.size();i++)                
                task_list.push(action::TriggerJob(r.act,_list[i]));
             // Send event to the database

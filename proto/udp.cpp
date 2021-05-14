@@ -8,7 +8,7 @@ UdpRule::UdpRule(const std::vector<std::string>& tkn_rule)
     : Ipv4Rule(6), BaseRule(tkn_rule) {}
 void UdpRule::parse(const boost::program_options::options_description& opt)
 {
-    rule_type = "udp";
+    rule_type = "UDP";
     parser::CommandParser cp(opt);
     boost::program_options::variables_map vm = cp.parse(tokenize_rule);
     // store text rule
