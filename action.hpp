@@ -18,6 +18,7 @@
 
 #include "exceptions.hpp"
 #include "functions.hpp"
+#include "client.hpp"
 
 // Get log4cpp logger from main programm
 extern log4cpp::Category& logger;
@@ -36,7 +37,8 @@ namespace action
     //void job_dump(const std::string& to, const std::string& data); // FUTURE: create dump traffic and store to .pcap file
     // Function to write messages to syslog
     void job_syslog(const std::string& to, const std::string& data);
-
+    //Function for filter anomaly 
+    void job_filter(const std::string& to, const std::string& data);
     // Allowed job types
     typedef std::function<void(const std::string&, const std::string&)> j_funct;
     typedef std::map<std::string, j_funct> types_map_t;
@@ -59,6 +61,11 @@ namespace action
         explicit Action(const std::string& type);
         Action(const std::string& type, const std::string& file);
         Action& operator=(const Action& other);
+
+	bool is_filter();
+
+	static  std::string ip;
+	static  uint16_t port;
     private:
         // Changing the type of task
         std::string check_type(const std::string& type) const;

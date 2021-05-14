@@ -59,13 +59,37 @@ namespace action
             << data;
         syslog(LOG_DAEMON, "ddosdetector trigger alarm: %s", data.c_str());
     }
+    void job_filter(const std::string& to, const std::string& data)
+    {
+	static Client _client(Action::ip, Action::port);
+	try{
+//		if(!_client.connect())
+//			return;
+		if(_client.send(data)){
+			std::string x = _client.read("\n");
+//			x=_client.read("\n");
+			std::cout<<x;
+			if(x == "OK!\n"){
+        			//logger << log4cpp::Priority::DEBUG
+				//	<< "JOB_FILTER: "
+				//	<<"done.";
+				std::cout<<"TTTTT"<<std::endl;
+			}
+		}
+	}catch(...){
+//		_client.close();
+		return;
+	}
+//	_client.close();
+    }
 
     // map of types job
     types_map_t type_list::jobs = {
         {"log", std::bind(&job_log, std::placeholders::_1, std::placeholders::_2)},
         {"script", std::bind(&job_script, std::placeholders::_1, std::placeholders::_2)},
         //{"dump", std::bind(&job_dump, std::placeholders::_1, std::placeholders::_2)},
-        {"syslog", std::bind(&job_syslog, std::placeholders::_1, std::placeholders::_2)}
+        {"syslog", std::bind(&job_syslog, std::placeholders::_1, std::placeholders::_2)},
+        {"filter", std::bind(&job_filter, std::placeholders::_1, std::placeholders::_2)}
     };
     types_map_t::iterator type_list::find(const std::string& v)
     {
@@ -85,6 +109,11 @@ namespace action
         : type_(check_type(type)), file_("") {}
     Action::Action(const std::string& type, const std::string& file)
         : type_(check_type(type)), file_(file)  {}
+    bool Action::is_filter(){
+	    if(type_ == "filter")
+		    return true;
+	    return false;
+    }
     std::string Action::check_type(const std::string& type) const
     {
         auto it_t = type_list::find(type);
