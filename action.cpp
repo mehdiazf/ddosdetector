@@ -63,12 +63,9 @@ namespace action
     {
 	static Client _client(Action::ip, Action::port);
 	try{
-//		if(!_client.connect())
-//			return;
 		if(_client.send(data)){
 			std::string x = _client.read("\n");
-//			x=_client.read("\n");
-			std::cout<<x;
+			_client.read("\n");
 			if(x == "OK!\n"){
         			//logger << log4cpp::Priority::DEBUG
 				//	<< "JOB_FILTER: "
@@ -80,7 +77,6 @@ namespace action
 //		_client.close();
 		return;
 	}
-//	_client.close();
     }
 
     // map of types job

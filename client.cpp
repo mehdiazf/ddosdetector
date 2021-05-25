@@ -41,6 +41,6 @@ bool Client::send(const std::string str){
 std::string Client::read(std::string delim){
 	char buff[50];
 	::read(s, buff, sizeof(buff));
-	printf("Response: %s\n", buff);
+//	printf("Response: %s\n", buff);
 	return std::string(buff);
 }

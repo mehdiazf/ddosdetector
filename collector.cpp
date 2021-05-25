@@ -9,7 +9,7 @@ NetmapPoller::NetmapPoller(const struct nm_desc* nmd)
     rxring_(NETMAP_RXRING(nmd->nifp, nmd->first_rx_ring)) {}
 bool NetmapPoller::try_poll()
 {
-    int poll_result = poll(&fds_, 1, 1000);
+    int poll_result = poll(&fds_, 1, 4000);
     if (poll_result == 0) {
         return false;
     }

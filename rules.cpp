@@ -3,8 +3,8 @@
 // class RulesList
 template<class T>
 RulesList<T>::RulesList(boost::program_options::options_description opt)
-    : parse_opt_(opt), last_update_(std::chrono::high_resolution_clock::now())
-{}
+    : parse_opt_(opt), last_update_(std::chrono::high_resolution_clock::now()),
+      sampling_(0,MAX), rnd_(1234){}
 template<class T>
 bool RulesList<T>::operator==(const RulesList& other) const
 {
@@ -85,7 +85,7 @@ void RulesList<T>::check_triggers(ts_queue<action::TriggerJob>& task_list,
     boost::lock_guard<boost::shared_mutex> guard(m_);
     for(auto& r: rules_)
     {
-        if(r.is_triggered()) // If the trigger is fired
+        if( (sampling_(rnd_)%2)==0 && r.is_triggered()) // If the trigger is fired
         {
             // Add the trigger job to the job processor queue
             task_list.push(action::TriggerJob(r.act, r.get_job_info(r.get_description())));
@@ -108,11 +108,13 @@ void RulesList<T>::_check_triggers(ts_queue<action::TriggerJob>& task_list,
         {
             std::vector<std::string> _list;
             r.get_ip_list(_list, std::forward<std::string>(r.get_description()));             
-            for(unsigned int i=0; i<_list.size();i++)                
-               task_list.push(action::TriggerJob(r.act,_list[i]));
+            for(unsigned int i=0; i<_list.size(); i++){
+			if((sampling_(rnd_)%2)==0)
+               	    		task_list.push(action::TriggerJob(r.act,_list[i]));
             // Send event to the database
             //influx.insert(r.get_trigger_influx());
-        }
+        	}
+       }
         // We clear the check counters so as not to clog the memory
         r.dst_top.clear();
     }

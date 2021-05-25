@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <chrono>
+#include <random>
 #include <ctime>
 
 #include <boost/thread.hpp>
@@ -31,6 +32,10 @@
 #include "proto/tcp.hpp"
 #include "proto/udp.hpp"
 #include "proto/icmp.hpp"
+
+//for radnom number
+#define MAX 1000000
+
 
 // Get log4cpp logger from main programm
 extern log4cpp::Category& logger;
@@ -133,6 +138,7 @@ public:
      Returns parameters for parsing rules (variable parse_opt_).
     */
     boost::program_options::options_description get_params() const;
+
 private:
     mutable boost::shared_mutex m_;
     // Vector for storing rules
@@ -141,6 +147,11 @@ private:
     boost::program_options::options_description parse_opt_;
     // Time of the last change of data in the sheet (change of counters)
     std::chrono::high_resolution_clock::time_point last_update_; 
+    /*
+     Randomly push alerts to avoid buffer congestion
+    */
+    std::uniform_int_distribution<int> sampling_;
+    std::default_random_engine rnd_;
 };
 
 /*

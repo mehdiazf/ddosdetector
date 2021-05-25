@@ -22,7 +22,6 @@
 #include "collector.hpp"
 #include "controld.hpp"
 #include "action.hpp"
-
 // Default argument for Main process
 std::string action::Action::ip = "127.0.0.1";
 uint16_t action::Action::port = 9200;
@@ -69,7 +68,7 @@ void watcher(std::vector<std::shared_ptr<RulesCollection>>& collect,
         if(last_change == main_collect->last_change)
         {
             // check triggers
-            main_collect->check_triggers(*task_list, *influx);
+            	main_collect->check_triggers(*task_list, *influx);
             
         }
         else
@@ -77,7 +76,7 @@ void watcher(std::vector<std::shared_ptr<RulesCollection>>& collect,
             last_change = main_collect->last_change;
         }
         // sleep one second
-        boost::this_thread::sleep_for(boost::chrono::seconds(1));
+        boost::this_thread::sleep_for(boost::chrono::seconds(4));
     }
 }
 
@@ -132,7 +131,7 @@ void task_runner(std::shared_ptr<ts_queue<action::TriggerJob>> task_list)
         // check exit
         boost::this_thread::interruption_point();
         // wait ano second or change status queue
-        if(task_list->wait_and_pop(cur_job, 1000)) 
+        if(task_list->wait_and_pop(cur_job,30)) 
         {
             // start task
             cur_job.run(); 
